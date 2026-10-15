@@ -83,6 +83,26 @@
         .live-dot {
             animation: pulse-live 1.6s infinite;
         }
+        /* Broadcast TV Overlay Animations (Spectator Mode Only) */
+        @keyframes tvPopIn {
+            0% { opacity: 0; transform: scale(0.6) translateY(30px); }
+            20% { opacity: 1; transform: scale(1.06) translateY(0); }
+            30% { transform: scale(1); }
+            85% { opacity: 1; transform: scale(1); }
+            100% { opacity: 0; transform: scale(1.12) translateY(-20px); }
+        }
+        @keyframes shimmerGold {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+        .tv-anim-card {
+            animation: tvPopIn 3.1s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+        }
+        .cherry-badge {
+            background: linear-gradient(90deg, rgba(16,185,129,0.18), rgba(245,158,11,0.22), rgba(16,185,129,0.18));
+            background-size: 200% 100%;
+            animation: shimmerGold 6s infinite linear;
+        }
         @media print {
             .no-print { display: none !important; }
             body { background: #ffffff !important; color: #000000 !important; }
@@ -90,6 +110,18 @@
     </style>
 </head>
 <body class="min-h-screen flex flex-col selection:bg-emerald-500 selection:text-slate-950">
+
+    <!-- SPECTATOR-ONLY BROADCAST TV GRAPHICS OVERLAY (FOUR / SIX / WICKET / 50 / 100) -->
+    <div id="spectatorTvOverlay" class="fixed inset-0 z-50 hidden pointer-events-none flex items-center justify-center p-4 bg-black/55 backdrop-blur-sm">
+        <div id="spectatorTvCard" class="max-w-lg w-full rounded-3xl p-6 sm:p-8 text-center border-2 shadow-2xl relative overflow-hidden">
+            <div id="spectatorTvGlow" class="absolute -inset-10 opacity-30 blur-3xl pointer-events-none"></div>
+            <div id="spectatorTvIcon" class="text-5xl sm:text-6xl mb-3"></div>
+            <div id="spectatorTvBadge" class="inline-block px-3 py-0.5 rounded-full text-[11px] font-extrabold uppercase tracking-widest mb-2"></div>
+            <h2 id="spectatorTvHeadline" class="score-font text-4xl sm:text-6xl font-extrabold tracking-tight text-white drop-shadow-lg"></h2>
+            <p id="spectatorTvSubtext" class="text-sm sm:text-base font-bold text-slate-200 mt-2"></p>
+            <p class="text-[10px] font-bold uppercase tracking-widest text-amber-300/80 mt-4">CricPulse Pro Live Broadcast • Crafted by Cherry</p>
+        </div>
+    </div>
 
     <!-- TOP NAVIGATION BAR -->
     <header class="sticky top-0 z-40 bg-stadium-950/95 backdrop-blur-md border-b border-slate-800/80 px-3 sm:px-6 py-2.5 no-print">
@@ -100,13 +132,16 @@
                     <i class="fa-solid fa-baseball-bat-ball text-slate-950 text-lg"></i>
                 </div>
                 <div>
-                    <div class="flex items-center gap-2">
+                    <div class="flex items-center flex-wrap gap-1.5 sm:gap-2">
                         <span class="font-extrabold tracking-tight text-base sm:text-lg text-white">CricPulse <span class="text-emerald-400">PRO</span></span>
-                        <button onclick="event.stopPropagation(); app.openCloudSetupModal();" id="cloudStatusBadge" title="Configure GitHub Live Cloud Sync" class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 flex items-center gap-1">
+                        <span class="cherry-badge text-[10px] font-extrabold px-2.5 py-0.5 rounded-full text-amber-300 border border-amber-400/40 shadow-sm flex items-center gap-1">
+                            <i class="fa-solid fa-wand-magic-sparkles text-emerald-400 text-[9px]"></i> Crafted by Cherry
+                        </span>
+                        <button onclick="event.stopPropagation(); app.openCloudSetupModal();" id="cloudStatusBadge" title="Configure GitHub Live Cloud Sync" class="scorer-only text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 flex items-center gap-1">
                             <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> Auto-Saved
                         </button>
                     </div>
-                    <p id="topSeriesSubtext" class="text-[11px] text-slate-400 hidden sm:block">Broadcast Scoring, Live Spectator Links & Series Analytics</p>
+                    <p id="topSeriesSubtext" class="text-[11px] text-slate-400 hidden sm:block">Broadcast Scoring, Live Spectator Links & Series Analytics • Crafted by Cherry</p>
                 </div>
             </div>
 
@@ -116,10 +151,19 @@
                     <span class="w-2 h-2 rounded-full bg-emerald-400 live-dot"></span>
                     <span class="text-slate-400 hidden md:inline">Room:</span>
                     <span id="navRoomCode" class="score-font font-bold text-emerald-300 tracking-wider">----</span>
-                    <button onclick="app.openShareSpectatorModal()" title="Share Spectator Link & WhatsApp Score" class="ml-1 text-slate-950 font-bold px-2 py-0.5 rounded-lg bg-emerald-400 hover:bg-emerald-300 flex items-center gap-1 text-[11px]">
+                    <button onclick="app.openShareSpectatorModal()" title="Share Spectator Link & WhatsApp Score" class="scorer-only ml-1 text-slate-950 font-bold px-2 py-0.5 rounded-lg bg-emerald-400 hover:bg-emerald-300 flex items-center gap-1 text-[11px]">
                         <i class="fa-solid fa-share-nodes"></i> <span class="hidden sm:inline">Share Live</span>
                     </button>
                 </div>
+
+                <!-- Spectator Sound & Fullscreen Dugout TV Toggles -->
+                <button onclick="app.toggleSpectatorAudio()" id="btnSpectatorAudio" title="Toggle Broadcast Crowd & Boundary Audio" class="hidden tap-btn px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-500/30 items-center gap-1">
+                    <i id="iconSpectatorAudio" class="fa-solid fa-volume-xmark"></i>
+                    <span class="hidden md:inline" id="textSpectatorAudio">Audio Off</span>
+                </button>
+                <button onclick="app.toggleFullscreenTV()" title="Toggle Dugout Fullscreen TV View" class="tap-btn px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center gap-1">
+                    <i class="fa-solid fa-expand text-emerald-400"></i>
+                </button>
 
                 <button onclick="app.navigate('hub')" id="navBtn-hub" class="tap-btn px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-200 flex items-center gap-1.5">
                     <i class="fa-solid fa-trophy text-amber-400"></i>
@@ -165,7 +209,8 @@
                         <p id="hubSeriesStanding" class="text-sm text-slate-300">
                             Create a new single match or multi-match bilateral series, or join a live match as a spectator with a 6-digit Room Code or Direct Link.
                         </p>
-                        <div id="hubActionButtons" class="pt-3 flex flex-wrap gap-2.5">
+                        <!-- Admin Action Buttons: Strictly Hidden in Locked Spectator Mode -->
+                        <div id="hubActionButtons" class="scorer-only pt-3 flex flex-wrap gap-2.5">
                             <button onclick="app.openSetupModal('new_series')" class="tap-btn px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-bold text-sm shadow-lg shadow-emerald-500/20 flex items-center gap-2">
                                 <i class="fa-solid fa-plus-circle"></i> New Match / Series
                             </button>
@@ -176,6 +221,11 @@
                                 <i class="fa-solid fa-wand-magic-sparkles text-amber-400"></i> Load Sample Thriller Match
                             </button>
                         </div>
+                        <div id="hubSpectatorNotice" class="hidden pt-2">
+                            <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-sky-500/15 border border-sky-500/30 text-sky-300 text-xs font-bold">
+                                <i class="fa-solid fa-tv"></i> Live Spectator Broadcast Mode Active — Select any match below to watch live or inspect analytics!
+                            </span>
+                        </div>
                     </div>
 
                     <!-- Watch Live Match by Code Box -->
@@ -184,7 +234,7 @@
                             <span class="text-xs font-bold uppercase tracking-wider text-sky-400 flex items-center gap-1.5">
                                 <i class="fa-solid fa-eye"></i> Live Spectator Room
                             </span>
-                            <button onclick="app.openCloudSetupModal()" class="text-[11px] text-emerald-400 hover:underline flex items-center gap-1">
+                            <button onclick="app.openCloudSetupModal()" class="scorer-only text-[11px] text-emerald-400 hover:underline flex items-center gap-1">
                                 <i class="fa-solid fa-cloud"></i> Cloud Sync Setup
                             </button>
                         </div>
@@ -195,7 +245,8 @@
                                 <i class="fa-solid fa-tower-broadcast"></i> Watch Live
                             </button>
                         </div>
-                        <div class="flex items-center justify-between pt-1 border-t border-slate-800 text-[11px] text-slate-400">
+                        <!-- Storage Backup & Reset Controls: Strictly Hidden for Spectators -->
+                        <div class="scorer-only flex items-center justify-between pt-1 border-t border-slate-800 text-[11px] text-slate-400">
                             <button onclick="app.exportJSONBackup()" class="hover:text-emerald-400 flex items-center gap-1">
                                 <i class="fa-solid fa-download"></i> Export Series JSON
                             </button>
@@ -284,14 +335,14 @@
                         <span id="liveRulesPills" class="hidden sm:inline-flex items-center gap-1.5"></span>
                     </div>
                     <div class="flex items-center gap-2">
-                        <button onclick="app.openShareSpectatorModal()" class="tap-btn px-2.5 py-1 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/40 text-emerald-300 text-xs font-bold flex items-center gap-1">
+                        <button onclick="app.openShareSpectatorModal()" class="scorer-only tap-btn px-2.5 py-1 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/40 text-emerald-300 text-xs font-bold flex items-center gap-1">
                             <i class="fa-solid fa-share-nodes"></i> Share Spectator Link
                         </button>
                         <button onclick="app.openMidMatchRulesModal()" id="btnMatchRules" class="scorer-only tap-btn px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs flex items-center gap-1">
                             <i class="fa-solid fa-sliders text-emerald-400"></i> Rules & Roster
                         </button>
-                        <button onclick="app.toggleSpectatorLock()" id="btnLockScorer" class="tap-btn px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs flex items-center gap-1" title="Switch to Spectator Preview">
-                            <i class="fa-solid fa-eye text-sky-400"></i> <span class="hidden sm:inline">Spectator View</span>
+                        <button onclick="app.toggleSpectatorLock()" id="btnLockScorer" class="scorer-only tap-btn px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs flex items-center gap-1" title="Preview Spectator Broadcast View">
+                            <i class="fa-solid fa-eye text-sky-400"></i> <span class="hidden sm:inline">Preview Spectator</span>
                         </button>
                     </div>
                 </div>
@@ -672,6 +723,23 @@
 
     </main>
 
+    <!-- BROADCAST WATERMARK & EMERGENCY SCORER LOGIN FOOTER -->
+    <footer class="mt-auto border-t border-slate-800/80 bg-stadium-950/90 py-3 px-4 text-center text-xs text-slate-400 no-print">
+        <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-2">
+            <div class="flex items-center gap-2">
+                <span class="font-bold text-slate-200">CricPulse <span class="text-emerald-400">PRO</span></span>
+                <span>•</span>
+                <span class="text-amber-300 font-semibold"><i class="fa-solid fa-wand-magic-sparkles text-emerald-400 mr-1"></i>Crafted by Cherry</span>
+            </div>
+            <div class="flex items-center gap-3">
+                <span id="footerModeStatus" class="text-[11px] text-slate-500">Official Live Broadcast & Series Engine</span>
+                <button onclick="app.openPinUnlockModal()" id="footerEmergencyPinBtn" class="hidden text-[11px] px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 text-amber-300 border border-amber-500/30 font-semibold items-center gap-1">
+                    <i class="fa-solid fa-key"></i> Emergency Scorer Login (PIN)
+                </button>
+            </div>
+        </div>
+    </footer>
+
     <!-- =========================================================== -->
     <!-- MODALS SUITE (Setup, Wicket, Wagon Wheel, Share & Cloud)    -->
     <!-- =========================================================== -->
@@ -725,8 +793,8 @@
                     <input id="setupMaxBowlerOvers" type="number" min="1" max="10" value="2" class="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-sm text-white">
                 </div>
                 <div>
-                    <label class="block text-[11px] font-bold uppercase text-slate-400 mb-1">Scorer 4-Digit PIN</label>
-                    <input id="setupScorerPin" type="text" maxlength="4" value="1234" class="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-sm font-mono text-emerald-300">
+                    <label class="block text-[11px] font-bold uppercase text-amber-400 mb-1">Scorer 4-Digit PIN (Emergency Unlock)</label>
+                    <input id="setupScorerPin" type="text" maxlength="4" value="7788" placeholder="e.g. 7788" class="w-full px-3 py-2 rounded-xl bg-slate-900 border border-amber-500/40 text-sm font-mono text-emerald-300">
                 </div>
             </div>
 
@@ -1048,13 +1116,14 @@
     <div id="modal-pin" class="fixed inset-0 z-50 hidden bg-black/80 backdrop-blur-sm flex items-center justify-center p-3">
         <div class="glass-card rounded-2xl max-w-sm w-full p-5 border border-amber-500/40 space-y-4">
             <h3 class="text-base font-extrabold text-amber-400 flex items-center gap-2">
-                <i class="fa-solid fa-key"></i> Unlock Official Scorer Controls
+                <i class="fa-solid fa-key"></i> Emergency Scorer Takeover (PIN)
             </h3>
-            <p class="text-xs text-slate-300">Enter the 4-digit Scorer PIN set when this match/series was created (Default: <code class="text-emerald-300">1234</code>):</p>
-            <input id="inputUnlockPin" type="password" maxlength="4" placeholder="1234" class="w-full px-3 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-center font-mono text-lg text-white tracking-widest">
+            <p class="text-xs text-slate-300">Spectator Mode is strictly Read-Only. Enter the secret 4-digit Scorer PIN set by the match creator to unlock official scoring controls on this device:</p>
+            <input id="inputUnlockPin" type="password" maxlength="4" placeholder="••••" class="w-full px-3 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-center font-mono text-lg text-white tracking-widest">
+            <p id="pinLockoutWarning" class="hidden text-[11px] text-rose-400 font-bold text-center"></p>
             <div class="flex gap-2">
                 <button onclick="app.closeModal('modal-pin')" class="w-1/2 py-2 rounded-xl bg-slate-800 text-slate-300 text-xs font-bold">Cancel</button>
-                <button onclick="app.verifyScorerPin()" class="tap-btn w-1/2 py-2 rounded-xl bg-amber-500 text-slate-950 font-extrabold text-xs">Unlock Keypad</button>
+                <button onclick="app.verifyScorerPin()" id="btnVerifyPinSubmit" class="tap-btn w-1/2 py-2 rounded-xl bg-amber-500 text-slate-950 font-extrabold text-xs">Unlock Scorer Mode</button>
             </div>
         </div>
     </div>
@@ -1152,13 +1221,41 @@
     <!-- =========================================================== -->
     <script>
         // -------------------------------------------------------------
-        // CLOUD & LOCAL PERSISTENCE INITIALIZATION
+        // CLOUD & LOCAL PERSISTENCE INITIALIZATION + SECURITY HELPERS
         // -------------------------------------------------------------
         const STORAGE_KEY = 'CRICPULSE_PRO_STATE_V1';
         const CUSTOM_DB_URL_KEY = 'CRICPULSE_CUSTOM_RTDB_URL';
+        const PIN_LOCKOUT_KEY = 'CRICPULSE_PIN_LOCKOUT_UNTIL';
 
         // Optional: If you want to hardcode your free Firebase Realtime DB URL before uploading to GitHub, paste it inside the quotes below:
         const DEFAULT_GITHUB_FIREBASE_RTDB_URL = '';
+
+        // Obfuscate/Hash PIN so it is never readable in plain text in network payloads
+        function hashScorerPin(pinStr) {
+            const clean = String(pinStr || '').trim();
+            let h = 2166136261;
+            for (let i = 0; i < clean.length; i++) {
+                h ^= clean.charCodeAt(i);
+                h += (h << 1) + (h << 4) + (h << 7) + (h << 8) + (h << 24);
+            }
+            return 'CPH-' + (h >>> 0).toString(16);
+        }
+
+        // Encode & Decode Cloud Sync URL into an obfuscated token so raw Firebase URLs never show in the address bar
+        function encodeCloudToken(urlStr) {
+            try {
+                return btoa(encodeURIComponent(urlStr)).replace(/=/g, '');
+            } catch (e) {
+                return '';
+            }
+        }
+        function decodeCloudToken(tokenStr) {
+            try {
+                return decodeURIComponent(atob(tokenStr));
+            } catch (e) {
+                return '';
+            }
+        }
 
         let db = null;
         let auth = null;
@@ -1283,6 +1380,7 @@
                     if (window.app.isSpectator || data.updatedBy !== currentUser.uid) {
                         try {
                             const incoming = JSON.parse(data.payload);
+                            window.app.checkAndTriggerSpectatorTVAnimation(window.app.state, incoming);
                             window.app.state = incoming;
                             localStorage.setItem(STORAGE_KEY, JSON.stringify(window.app.state));
                             window.app.renderAll();
@@ -1311,8 +1409,13 @@
                     if (!res.ok) return;
                     const data = await res.json();
                     if (data && data.payload && data.updatedAt !== lastExternalSyncTimestamp) {
+                        const isFirstLoad = lastExternalSyncTimestamp === 0;
                         lastExternalSyncTimestamp = data.updatedAt;
-                        window.app.state = JSON.parse(data.payload);
+                        const incoming = JSON.parse(data.payload);
+                        if (!isFirstLoad) {
+                            window.app.checkAndTriggerSpectatorTVAnimation(window.app.state, incoming);
+                        }
+                        window.app.state = incoming;
                         localStorage.setItem(STORAGE_KEY, JSON.stringify(window.app.state));
                         window.app.renderAll();
                         const sub = document.getElementById('spectatorSubStatus');
@@ -1337,15 +1440,31 @@
             state: null,
             currentView: 'hub',
             isSpectator: false,
+            spectatorAudioEnabled: false,
+            failedPinAttempts: 0,
+            lastAnimatedBallSignature: null,
             activeExtraMode: null, // 'WD', 'NB', 'B', 'LB' or null
             pendingWagonBallRef: null,
 
             init() {
-                // 1. Check URL Parameters for Direct Spectator Link (?room=CRIC-XXX&mode=spectator&db=... or ?snap=...)
+                // 1. Check URL Parameters for Direct Spectator Link (?room=CRIC-XXX&k=...)
                 const params = new URLSearchParams(window.location.search);
                 const urlDb = params.get('db');
-                if (urlDb) {
+                const urlKey = params.get('k');
+                if (urlKey) {
+                    const decoded = decodeCloudToken(urlKey);
+                    if (decoded && decoded.startsWith('http')) {
+                        localStorage.setItem(CUSTOM_DB_URL_KEY, decoded);
+                    }
+                } else if (urlDb) {
                     localStorage.setItem(CUSTOM_DB_URL_KEY, decodeURIComponent(urlDb));
+                }
+
+                // Immediately scrub any database/token parameters from the browser address bar for privacy!
+                if (urlDb || urlKey) {
+                    const cleanRoom = params.get('room');
+                    const cleanUrl = window.location.origin + window.location.pathname + (cleanRoom ? `?room=${encodeURIComponent(cleanRoom)}` : '');
+                    window.history.replaceState({}, document.title, cleanUrl);
                 }
 
                 const urlSnap = params.get('snap');
@@ -1356,7 +1475,8 @@
                             this.state = JSON.parse(decompressed);
                             this.isSpectator = true;
                             localStorage.setItem(STORAGE_KEY, JSON.stringify(this.state));
-                            this.showToast('Loaded Match Snapshot in Spectator Mode!', 'sky');
+                            window.history.replaceState({}, document.title, window.location.origin + window.location.pathname);
+                            this.showToast('Loaded Match Snapshot in Locked Spectator Mode!', 'sky');
                         }
                     } catch (e) {
                         console.warn('Snapshot URL decode warning:', e);
@@ -1382,12 +1502,12 @@
 
                 initFirebaseCloud();
 
-                // 3. If URL has ?room=CRIC-XXX, auto-join as Spectator!
+                // 3. If URL has ?room=CRIC-XXX, lock into True Read-Only Spectator Mode!
                 const urlRoom = params.get('room');
                 if (urlRoom) {
                     this.isSpectator = true;
                     document.getElementById('joinRoomInput').value = urlRoom.toUpperCase();
-                    setTimeout(() => this.joinCloudRoom(urlRoom.toUpperCase()), 500);
+                    setTimeout(() => this.joinCloudRoom(urlRoom.toUpperCase()), 450);
                 }
 
                 // Resume directly to the active view saved before refresh
@@ -1397,6 +1517,150 @@
                     this.navigate(resumeView);
                 } else {
                     this.navigate('hub');
+                }
+            },
+
+            // -------------------------------------------------------------
+            // SPECTATOR BROADCAST TV ANIMATIONS (FOUR, SIX, WICKET, 50/100)
+            // -------------------------------------------------------------
+            checkAndTriggerSpectatorTVAnimation(oldState, newState) {
+                if (!this.isSpectator || !newState || !newState.matches) return;
+                const newMatch = newState.matches[newState.activeMatchIndex];
+                if (!newMatch) return;
+                const newInn = newMatch.innings[newMatch.currentInningsIndex];
+                if (!newInn || !newInn.ballLog || newInn.ballLog.length === 0) return;
+
+                const latestBall = newInn.ballLog[0];
+                const sig = `${newMatch.matchId}-${newInn.inningsNumber}-${newInn.legalBalls}-${newInn.runs}-${newInn.wickets}-${latestBall.label}`;
+                if (this.lastAnimatedBallSignature === sig) return;
+                this.lastAnimatedBallSignature = sig;
+
+                const lbl = String(latestBall.label || '').toUpperCase();
+                const batterName = latestBall.striker || 'Batter';
+                const batterRuns = newInn.batStats?.[batterName]?.runs || 0;
+
+                if (lbl === 'W') {
+                    this.triggerSpectatorTVOverlay('WICKET', 'WICKET!', `${batterName} departs! (${latestBall.desc})`, 'rose');
+                } else if (lbl.includes('6')) {
+                    if (batterRuns >= 100 && batterRuns - 6 < 100) {
+                        this.triggerSpectatorTVOverlay('CENTURY', 'CENTURY! 100*', `${batterName} brings up a magnificent 100 (${newInn.batStats[batterName].balls} balls)!`, 'amber');
+                    } else if (batterRuns >= 50 && batterRuns - 6 < 50) {
+                        this.triggerSpectatorTVOverlay('FIFTY', 'HALF-CENTURY! 50*', `${batterName} reaches a superb 50 with a MAXIMUM!`, 'amber');
+                    } else {
+                        this.triggerSpectatorTVOverlay('SIX', 'MAXIMUM! 6', `HUGE SIX launched by ${batterName} off ${latestBall.bowler}!`, 'purple');
+                    }
+                } else if (lbl.includes('4') && !lbl.includes('WD') && !lbl.includes('B')) {
+                    if (batterRuns >= 100 && batterRuns - 4 < 100) {
+                        this.triggerSpectatorTVOverlay('CENTURY', 'CENTURY! 100*', `${batterName} reaches 100 with a glorious boundary!`, 'amber');
+                    } else if (batterRuns >= 50 && batterRuns - 4 < 50) {
+                        this.triggerSpectatorTVOverlay('FIFTY', 'FIFTY UP! 50*', `Well played ${batterName} — 50 runs (${newInn.batStats[batterName].balls} balls)!`, 'amber');
+                    } else {
+                        this.triggerSpectatorTVOverlay('FOUR', 'BOUNDARY! 4', `CRACKING FOUR raced away by ${batterName}!`, 'emerald');
+                    }
+                }
+            },
+
+            triggerSpectatorTVOverlay(eventType, headline, subtext, themeColor) {
+                const overlay = document.getElementById('spectatorTvOverlay');
+                const card = document.getElementById('spectatorTvCard');
+                const glow = document.getElementById('spectatorTvGlow');
+                const icon = document.getElementById('spectatorTvIcon');
+                const badge = document.getElementById('spectatorTvBadge');
+                const headEl = document.getElementById('spectatorTvHeadline');
+                const subEl = document.getElementById('spectatorTvSubtext');
+                if (!overlay || !card) return;
+
+                const themes = {
+                    emerald: {
+                        card: 'bg-gradient-to-br from-emerald-950 via-slate-900 to-teal-950 border-emerald-400 shadow-emerald-500/30',
+                        glow: 'bg-emerald-500',
+                        badge: 'bg-emerald-400 text-slate-950',
+                        icon: '<i class="fa-solid fa-bolt text-emerald-400 animate-bounce"></i>',
+                        tag: 'CRACKING BOUNDARY'
+                    },
+                    purple: {
+                        card: 'bg-gradient-to-br from-purple-950 via-slate-900 to-indigo-950 border-purple-400 shadow-purple-500/40',
+                        glow: 'bg-purple-500',
+                        badge: 'bg-amber-400 text-slate-950',
+                        icon: '<i class="fa-solid fa-meteor text-amber-400 animate-bounce"></i>',
+                        tag: 'STADIUM MAXIMUM'
+                    },
+                    rose: {
+                        card: 'bg-gradient-to-br from-rose-950 via-slate-900 to-red-950 border-rose-500 shadow-rose-600/40',
+                        glow: 'bg-rose-600',
+                        badge: 'bg-rose-500 text-white',
+                        icon: '<i class="fa-solid fa-burst text-rose-400 animate-ping"></i>',
+                        tag: 'TIMBER / OUT!'
+                    },
+                    amber: {
+                        card: 'bg-gradient-to-br from-amber-950 via-slate-900 to-yellow-950 border-amber-400 shadow-amber-500/40',
+                        glow: 'bg-amber-400',
+                        badge: 'bg-amber-400 text-slate-950',
+                        icon: '<i class="fa-solid fa-trophy text-amber-400 animate-bounce"></i>',
+                        tag: 'BATTER MILESTONE'
+                    }
+                };
+
+                const t = themes[themeColor] || themes.emerald;
+                card.className = `tv-anim-card max-w-lg w-full rounded-3xl p-6 sm:p-8 text-center border-2 shadow-2xl relative overflow-hidden ${t.card}`;
+                glow.className = `absolute -inset-10 opacity-30 blur-3xl pointer-events-none ${t.glow}`;
+                badge.className = `inline-block px-3 py-0.5 rounded-full text-[11px] font-extrabold uppercase tracking-widest mb-2 ${t.badge}`;
+                badge.textContent = t.tag;
+                icon.innerHTML = t.icon;
+                headEl.textContent = headline;
+                subEl.textContent = subtext;
+
+                overlay.classList.remove('hidden');
+                this.playBroadcastSound(eventType);
+
+                if (this.tvOverlayTimer) clearTimeout(this.tvOverlayTimer);
+                this.tvOverlayTimer = setTimeout(() => {
+                    overlay.classList.add('hidden');
+                }, 3100);
+            },
+
+            toggleSpectatorAudio() {
+                this.spectatorAudioEnabled = !this.spectatorAudioEnabled;
+                const ic = document.getElementById('iconSpectatorAudio');
+                const tx = document.getElementById('textSpectatorAudio');
+                if (ic) ic.className = this.spectatorAudioEnabled ? 'fa-solid fa-volume-high text-emerald-400' : 'fa-solid fa-volume-xmark';
+                if (tx) tx.textContent = this.spectatorAudioEnabled ? 'Audio On' : 'Audio Off';
+                if (this.spectatorAudioEnabled) {
+                    this.playBroadcastSound('FOUR');
+                    this.showToast('Spectator Stadium Audio Enabled! You will hear broadcast chimes on 4s, 6s & Wickets.', 'emerald');
+                } else {
+                    this.showToast('Spectator Audio Muted.', 'amber');
+                }
+            },
+
+            playBroadcastSound(type) {
+                if (!this.spectatorAudioEnabled) return;
+                try {
+                    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                    const ctx = new AudioCtx();
+                    const notes = type === 'SIX' ? [523.25, 659.25, 783.99, 1046.5]
+                                : type === 'WICKET' ? [440, 392, 349.23, 261.63]
+                                : [440, 554.37, 659.25];
+                    notes.forEach((freq, i) => {
+                        const osc = ctx.createOscillator();
+                        const gain = ctx.createGain();
+                        osc.type = type === 'WICKET' ? 'sawtooth' : 'triangle';
+                        osc.frequency.value = freq;
+                        gain.gain.setValueAtTime(0.14, ctx.currentTime + i * 0.11);
+                        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i * 0.11 + 0.35);
+                        osc.connect(gain);
+                        gain.connect(ctx.destination);
+                        osc.start(ctx.currentTime + i * 0.11);
+                        osc.stop(ctx.currentTime + i * 0.11 + 0.36);
+                    });
+                } catch (e) {}
+            },
+
+            toggleFullscreenTV() {
+                if (!document.fullscreenElement) {
+                    document.documentElement.requestFullscreen?.().catch(() => {});
+                } else {
+                    document.exitFullscreen?.().catch(() => {});
                 }
             },
 
@@ -1411,7 +1675,7 @@
                     roomCode: this.generateRoomCode(),
                     seriesName: 'Weekend Champions Series',
                     seriesLength: 3,
-                    scorerPin: '1234',
+                    scorerPinHash: hashScorerPin('7788'),
                     venue: 'Greenfield Turf Arena',
                     pitch: 'Astro Turf / Box',
                     defaultOvers: 6,
@@ -1508,6 +1772,28 @@
                 document.getElementById('navBtn-match').classList.toggle('hidden', !hasMatch);
                 document.getElementById('navBtn-scorecard').classList.toggle('hidden', !hasMatch);
                 document.getElementById('navBtn-analytics').classList.toggle('hidden', !hasMatch);
+
+                // Toggle Global Scorer-Only vs Spectator-Only Elements
+                document.querySelectorAll('.scorer-only').forEach(el => {
+                    el.classList.toggle('hidden', this.isSpectator);
+                });
+
+                const audioBtn = document.getElementById('btnSpectatorAudio');
+                if (audioBtn) {
+                    audioBtn.classList.toggle('hidden', !this.isSpectator);
+                    audioBtn.classList.toggle('flex', this.isSpectator);
+                }
+
+                const footPinBtn = document.getElementById('footerEmergencyPinBtn');
+                if (footPinBtn) {
+                    footPinBtn.classList.toggle('hidden', !this.isSpectator);
+                    footPinBtn.classList.toggle('inline-flex', this.isSpectator);
+                }
+
+                const hubSpecNotice = document.getElementById('hubSpectatorNotice');
+                if (hubSpecNotice) {
+                    hubSpecNotice.classList.toggle('hidden', !this.isSpectator);
+                }
 
                 const roomBanner = document.getElementById('liveRoomBanner');
                 if (this.state && this.state.roomCode) {
@@ -1720,7 +2006,7 @@
                 document.getElementById('setupPitch').value = s.pitch;
                 document.getElementById('setupOvers').value = s.defaultOvers;
                 document.getElementById('setupMaxBowlerOvers').value = s.defaultMaxBowlerOvers;
-                document.getElementById('setupScorerPin').value = s.scorerPin || '1234';
+                document.getElementById('setupScorerPin').value = '';
                 document.getElementById('setupLastManRule').checked = !!s.rules.lastManStanding;
                 document.getElementById('setupWagonWheelRule').checked = !!s.rules.wagonWheel;
                 document.getElementById('setupRebowlExtras').checked = !!s.rules.rebowlExtras;
@@ -1769,7 +2055,7 @@
                 const pitch = document.getElementById('setupPitch').value;
                 const totalOvers = Math.max(1, parseInt(document.getElementById('setupOvers').value, 10) || 6);
                 const maxBowlerOvers = Math.max(1, parseInt(document.getElementById('setupMaxBowlerOvers').value, 10) || 2);
-                const scorerPin = document.getElementById('setupScorerPin').value.trim() || '1234';
+                const rawPin = document.getElementById('setupScorerPin').value.trim();
 
                 const teamAName = document.getElementById('setupTeamAName').value.trim() || 'Team Alpha';
                 const teamBName = document.getElementById('setupTeamBName').value.trim() || 'Team Bravo';
@@ -1794,7 +2080,12 @@
                 this.state.pitch = pitch;
                 this.state.defaultOvers = totalOvers;
                 this.state.defaultMaxBowlerOvers = maxBowlerOvers;
-                this.state.scorerPin = scorerPin;
+                if (rawPin) {
+                    this.state.scorerPinHash = hashScorerPin(rawPin);
+                } else if (!this.state.scorerPinHash) {
+                    this.state.scorerPinHash = hashScorerPin('7788');
+                }
+                delete this.state.scorerPin; // Ensure plain text PIN is never stored in state payload
                 this.state.rules = rules;
                 this.state.teamA = { name: teamAName, players: teamAPlayers };
                 this.state.teamB = { name: teamBName, players: teamBPlayers };
@@ -3227,6 +3518,7 @@
         <p style="margin:4px 0;"><strong>Result:</strong> <span class="badge">${match.resultText || 'In Progress'}</span></p>
         <p style="margin:4px 0;font-size:13px;color:#cbd5e1;">Venue: ${match.venue} (${match.pitch}) • Date: ${match.dateStr} • ${match.tossText}</p>
         <p style="margin:4px 0;font-size:13px;color:#fbbf24;"><strong>Player of the Match (MVP):</strong> ${mvp ? `${mvp.name} (${mvp.team}) — Rating ${mvp.rating}/10` : '-'}</p>
+        <p style="margin:6px 0 0 0;font-size:11px;color:#34d399;letter-spacing:1px;text-transform:uppercase;">⚡ Powered by CricPulse Pro • Crafted by Cherry</p>
     </div>
     ${buildInningsTableHTML(match.innings[0])}
     ${buildInningsTableHTML(match.innings[1])}
@@ -3269,7 +3561,7 @@
 
                 ctx.fillStyle = '#10b981';
                 ctx.font = 'bold 28px Inter, sans-serif';
-                ctx.fillText(`CRICPULSE PRO • ${this.state.seriesName.toUpperCase()}`, 60, 80);
+                ctx.fillText(`CRICPULSE PRO • CRAFTED BY CHERRY • ${this.state.seriesName.toUpperCase()}`, 60, 80);
 
                 ctx.fillStyle = '#ffffff';
                 ctx.font = 'bold 46px Inter, sans-serif';
@@ -3326,6 +3618,10 @@
                     ctx.fillText(`${mvp.name} (${mvp.team}) — Rating: ${mvp.rating}/10`, 95, 1210);
                 }
 
+                ctx.fillStyle = '#94a3b8';
+                ctx.font = 'bold 22px Inter, sans-serif';
+                ctx.fillText('Official Match Broadcast Card • Powered by CricPulse Pro (Crafted by Cherry)', 60, 1310);
+
                 const link = document.createElement('a');
                 link.download = `CricPulse_Match_${match.matchNumber}_BroadcastCard.png`;
                 link.href = canvas.toDataURL('image/png');
@@ -3339,9 +3635,10 @@
             getSpectatorShareUrl() {
                 const baseUrl = window.location.origin + window.location.pathname;
                 const customRtdb = getActiveCustomRtdbUrl();
-                let url = `${baseUrl}?room=${encodeURIComponent(this.state.roomCode)}&mode=spectator`;
-                if (customRtdb) {
-                    url += `&db=${encodeURIComponent(customRtdb)}`;
+                let url = `${baseUrl}?room=${encodeURIComponent(this.state.roomCode)}`;
+                // If DEFAULT_GITHUB_FIREBASE_RTDB_URL is not hardcoded, pass an obfuscated token (?k=...) which is immediately stripped on load
+                if (customRtdb && !DEFAULT_GITHUB_FIREBASE_RTDB_URL) {
+                    url += `&k=${encodeCloudToken(customRtdb)}`;
                 }
                 return url;
             },
@@ -3483,24 +3780,57 @@
 
             toggleSpectatorLock() {
                 this.isSpectator = !this.isSpectator;
-                this.renderMatchConsole();
-                this.showToast(this.isSpectator ? 'Spectator Read-Only View Active' : 'Scorer Mode Active', 'sky');
+                this.renderAll();
+                this.showToast(this.isSpectator ? 'Spectator Broadcast Preview Active (Use PIN to return to Scorer Mode)' : 'Scorer Mode Active', 'sky');
             },
 
             openPinUnlockModal() {
                 document.getElementById('inputUnlockPin').value = '';
+                const warnEl = document.getElementById('pinLockoutWarning');
+                if (warnEl) warnEl.classList.add('hidden');
                 document.getElementById('modal-pin').classList.remove('hidden');
             },
 
             verifyScorerPin() {
+                const now = Date.now();
+                const lockoutUntil = parseInt(localStorage.getItem(PIN_LOCKOUT_KEY) || '0', 10);
+                const warnEl = document.getElementById('pinLockoutWarning');
+
+                if (now < lockoutUntil) {
+                    const secsLeft = Math.ceil((lockoutUntil - now) / 1000);
+                    if (warnEl) {
+                        warnEl.textContent = `Too many failed attempts! Locked for ${secsLeft}s.`;
+                        warnEl.classList.remove('hidden');
+                    }
+                    return;
+                }
+
                 const entered = document.getElementById('inputUnlockPin').value.trim();
-                if (entered === (this.state.scorerPin || '1234')) {
+                const enteredHash = hashScorerPin(entered);
+                const expectedHash = this.state.scorerPinHash || hashScorerPin(this.state.scorerPin || '7788');
+
+                if (enteredHash === expectedHash || (this.state.scorerPin && entered === this.state.scorerPin)) {
+                    this.failedPinAttempts = 0;
+                    localStorage.removeItem(PIN_LOCKOUT_KEY);
                     this.isSpectator = false;
                     this.closeModal('modal-pin');
-                    this.renderMatchConsole();
-                    this.showToast('Scorer Keypad Unlocked!', 'emerald');
+                    this.renderAll();
+                    this.showToast('Official Scorer Controls Unlocked!', 'emerald');
                 } else {
-                    this.showToast('Incorrect Scorer PIN!', 'rose');
+                    this.failedPinAttempts = (this.failedPinAttempts || 0) + 1;
+                    if (this.failedPinAttempts >= 3) {
+                        localStorage.setItem(PIN_LOCKOUT_KEY, String(now + 60000));
+                        this.failedPinAttempts = 0;
+                        if (warnEl) {
+                            warnEl.textContent = '3 incorrect PIN attempts! Emergency login locked for 60 seconds.';
+                            warnEl.classList.remove('hidden');
+                        }
+                    } else {
+                        if (warnEl) {
+                            warnEl.textContent = `Incorrect PIN! (${3 - this.failedPinAttempts} attempt${3 - this.failedPinAttempts === 1 ? '' : 's'} remaining)`;
+                            warnEl.classList.remove('hidden');
+                        }
+                    }
                 }
             },
 
