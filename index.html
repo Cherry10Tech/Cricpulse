@@ -108,8 +108,12 @@
 
             <!-- Navigation & Action Controls -->
             <div class="flex items-center flex-wrap gap-1.5 sm:gap-2">
-                <!-- Spectator Sound & Fullscreen Dugout TV Toggles -->
-                <button onclick="app.toggleSpectatorAudio()" id="btnSpectatorAudio" title="Toggle Broadcast Crowd & Boundary Audio" class="tap-btn px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-500/30 flex items-center gap-1">
+                <!-- On-Demand IPL Trumpet Horn Button & Spectator Audio Toggle -->
+                <button onclick="app.playIPLTrumpetFanfare(true)" title="Blast IPL Stadium Trumpet Horn!" class="tap-btn px-2.5 py-1.5 rounded-xl text-xs font-extrabold bg-gradient-to-r from-amber-500/20 to-orange-500/20 hover:from-amber-500/30 hover:to-orange-500/30 text-amber-300 border border-amber-400/40 flex items-center gap-1">
+                    <i class="fa-solid fa-bullhorn text-amber-400"></i>
+                    <span class="hidden md:inline">🎺 IPL Horn</span>
+                </button>
+                <button onclick="app.toggleSpectatorAudio()" id="btnSpectatorAudio" title="Toggle Broadcast Crowd & Innings Start Audio" class="tap-btn px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-500/30 flex items-center gap-1">
                     <i id="iconSpectatorAudio" class="fa-solid fa-volume-xmark"></i>
                     <span class="hidden md:inline" id="textSpectatorAudio">Audio Off</span>
                 </button>
@@ -357,6 +361,19 @@
                         <p id="liveChaseEquationText" class="text-xs font-bold text-amber-300"></p>
                     </div>
                 </div>
+
+                <!-- Live Win Probability Bar (2nd Innings Chase) -->
+                <div id="liveWinProbContainer" class="hidden mt-3 pt-3 border-t border-slate-800/80 space-y-1">
+                    <div class="flex items-center justify-between text-[11px] font-bold">
+                        <span id="winProbTeamALabel" class="text-emerald-400">Team 1: 50%</span>
+                        <span class="text-[10px] uppercase tracking-wider text-slate-400">Live Win Probability</span>
+                        <span id="winProbTeamBLabel" class="text-sky-400">Team 2: 50%</span>
+                    </div>
+                    <div class="w-full h-2.5 rounded-full bg-slate-800 overflow-hidden flex">
+                        <div id="winProbBarLeft" class="h-full bg-emerald-500 transition-all duration-500" style="width: 50%"></div>
+                        <div id="winProbBarRight" class="h-full bg-sky-400 transition-all duration-500" style="width: 50%"></div>
+                    </div>
+                </div>
             </div>
 
             <!-- Main Console Grid: Left Active Crease + Commentary | Right Scorer Keypad -->
@@ -419,10 +436,15 @@
 
                         <!-- This Over Visual Balls -->
                         <div class="pt-2 border-t border-slate-800/80 flex items-center gap-2 overflow-x-auto pb-1">
-                            <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400 shrink-0">This Over:</span>
+                            <span id="thisOverLabelText" class="text-[11px] font-bold uppercase tracking-wider text-slate-400 shrink-0">This Over:</span>
                             <div id="thisOverBallsContainer" class="flex items-center gap-1.5">
                                 <!-- Ball chips populated by JS -->
                             </div>
+                        </div>
+
+                        <!-- Last Completed Over Summary Strip -->
+                        <div id="lastOverSummaryStrip" class="hidden pt-1.5 flex items-center gap-2 overflow-x-auto text-[11px] text-slate-400">
+                            <!-- Populated by JS -->
                         </div>
 
                         <!-- Head-to-Head Batter vs Bowler Rivalry Matchup Pill -->
@@ -580,6 +602,9 @@
                     <button onclick="app.downloadBroadcastSummaryPNG()" class="tap-btn px-3.5 py-2 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-extrabold text-xs shadow-lg shadow-sky-500/20 flex items-center gap-1.5">
                         <i class="fa-solid fa-image"></i> Download Broadcast Card (PNG)
                     </button>
+                    <button onclick="app.copyWhatsAppMatchSummaryText()" class="tap-btn px-3.5 py-2 rounded-xl bg-green-600 hover:bg-green-500 text-white font-extrabold text-xs shadow-lg shadow-green-600/20 flex items-center gap-1.5">
+                        <i class="fa-brands fa-whatsapp"></i> Copy WhatsApp Text Summary
+                    </button>
                     <button onclick="app.startSuperOverShootout()" id="btnStartSuperOver" class="scorer-only hidden tap-btn px-3.5 py-2 rounded-xl bg-gradient-to-r from-rose-600 to-amber-500 text-white font-extrabold text-xs shadow-lg shadow-rose-500/30 flex items-center gap-1.5 animate-pulse">
                         <i class="fa-solid fa-fire-flame-curved"></i> Start Live 1-Over Super Over
                     </button>
@@ -691,7 +716,12 @@
     <footer class="mt-auto border-t border-slate-800/80 py-3 px-4 text-center text-[11px] text-slate-400 no-print">
         <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-2">
             <span><strong>CricPulse Pro</strong> — Live Cricket Scorer, Series Manager & Broadcast Analytics</span>
-            <span class="text-amber-300 font-semibold">✨ Crafted by Cherry</span>
+            <div class="flex items-center gap-3">
+                <button onclick="app.playIPLTrumpetFanfare(true)" class="tap-btn px-2.5 py-1 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 border border-amber-400/40 text-amber-300 font-bold text-[11px] flex items-center gap-1">
+                    <i class="fa-solid fa-bullhorn"></i> 🎺 Test IPL Trumpet
+                </button>
+                <span class="text-amber-300 font-semibold">✨ Crafted by Cherry</span>
+            </div>
         </div>
     </footer>
 
@@ -1081,8 +1111,8 @@
                     <button onclick="app.shareWhatsAppDirect()" class="tap-btn flex-1 py-2.5 rounded-xl bg-green-600 hover:bg-green-500 text-white font-extrabold text-xs flex items-center justify-center gap-1.5">
                         <i class="fa-brands fa-whatsapp text-sm"></i> Share on WhatsApp
                     </button>
-                    <button onclick="app.copySnapshotLink()" class="tap-btn flex-1 py-2.5 rounded-xl bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 border border-sky-500/40 font-bold text-xs flex items-center justify-center gap-1.5">
-                        <i class="fa-solid fa-bolt"></i> Copy Instant Snapshot URL
+                    <button onclick="app.copySnapshotLink()" class="tap-btn flex-1 py-2.5 rounded-xl bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 border border-sky-500/40 font-bold text-xs flex items-center justify-center gap-1.5" title="Compresses full match scorecard & analytics inside the URL itself for permanent offline sharing">
+                        <i class="fa-solid fa-box-archive"></i> Copy Permanent Archive Link
                     </button>
                 </div>
             </div>
@@ -1157,12 +1187,48 @@
             wakeLockSentinel: null,
             failedPinAttempts: 0,
             lastAnimatedBallSignature: null,
+            lastInningsStartSignature: null,
             activeExtraMode: null,
             pendingWagonBallRef: null,
             spectatorPollInterval: null,
 
+            sanitizeStateData(st) {
+                if (!st) return st;
+                st.matches = Array.isArray(st.matches) ? st.matches : [];
+                st.teamA = st.teamA || { name: 'Team 1', color: '#10b981', players: [] };
+                st.teamB = st.teamB || { name: 'Team 2', color: '#38bdf8', players: [] };
+                st.teamA.players = Array.isArray(st.teamA.players) ? st.teamA.players : [];
+                st.teamB.players = Array.isArray(st.teamB.players) ? st.teamB.players : [];
+
+                if (st.matches.length > 0 && (typeof st.activeMatchIndex !== 'number' || st.activeMatchIndex < 0 || st.activeMatchIndex >= st.matches.length)) {
+                    st.activeMatchIndex = st.matches.length - 1;
+                }
+
+                st.matches.forEach(m => {
+                    m.rules = m.rules || { lastManStanding: true, wagonWheel: true, rebowlExtras: true };
+                    m.undoStack = Array.isArray(m.undoStack) ? m.undoStack : [];
+                    m.innings = Array.isArray(m.innings) ? m.innings : [];
+                    m.innings.forEach(inn => {
+                        inn.battingRoster = Array.isArray(inn.battingRoster) ? inn.battingRoster : [];
+                        inn.bowlingRoster = Array.isArray(inn.bowlingRoster) ? inn.bowlingRoster : [];
+                        inn.extras = inn.extras || { total: 0, wd: 0, nb: 0, b: 0, lb: 0 };
+                        inn.partnership = inn.partnership || { runs: 0, balls: 0 };
+                        inn.partnershipsList = Array.isArray(inn.partnershipsList) ? inn.partnershipsList : [];
+                        inn.batStats = inn.batStats || {};
+                        inn.bowlStats = inn.bowlStats || {};
+                        inn.fieldStats = inn.fieldStats || {};
+                        inn.thisOver = Array.isArray(inn.thisOver) ? inn.thisOver : [];
+                        inn.oversHistory = Array.isArray(inn.oversHistory) ? inn.oversHistory : [];
+                        inn.fow = Array.isArray(inn.fow) ? inn.fow : [];
+                        inn.ballLog = Array.isArray(inn.ballLog) ? inn.ballLog : [];
+                        inn.wagonShots = Array.isArray(inn.wagonShots) ? inn.wagonShots : [];
+                    });
+                });
+                return st;
+            },
+
             init() {
-                this.spectatorAudioEnabled = localStorage.getItem(AUDIO_PREF_KEY) === 'true';
+                this.spectatorAudioEnabled = localStorage.getItem(AUDIO_PREF_KEY) !== 'false';
                 this.updateAudioButtonUI();
                 this.setupInstallablePWA();
                 this.requestWakeLockQuietly();
@@ -1171,7 +1237,7 @@
                 const savedRaw = localStorage.getItem(STORAGE_KEY);
                 if (savedRaw) {
                     try {
-                        this.state = JSON.parse(savedRaw);
+                        this.state = this.sanitizeStateData(JSON.parse(savedRaw));
                     } catch (e) {
                         this.state = this.createDefaultSeriesState();
                     }
@@ -1196,7 +1262,7 @@
                     try {
                         const decompressed = LZString.decompressFromEncodedURIComponent(snapParam);
                         if (decompressed) {
-                            this.state = JSON.parse(decompressed);
+                            this.state = this.sanitizeStateData(JSON.parse(decompressed));
                             this.isSpectator = true;
                         }
                     } catch (e) {}
@@ -1296,16 +1362,18 @@
             async pullFromCloudRoom(showFeedback = false) {
                 const dbUrl = this.getDatabaseBaseUrl();
                 if (!dbUrl || !this.state?.roomCode) {
-                    if (showFeedback) this.showToast('Set a Firebase RTDB URL in Share Live settings for cloud polling, or use Snapshot Link.', 'amber');
+                    if (showFeedback) this.showToast('Set a Firebase RTDB URL in Share Live settings for cloud polling, or use Archive Link.', 'amber');
                     return;
                 }
                 try {
                     const res = await fetch(`${dbUrl}/cricpulse_rooms/${this.state.roomCode}.json`);
                     if (res.ok) {
                         const remoteData = await res.json();
-                        if (remoteData && remoteData.matches) {
+                        if (remoteData) {
                             const prevState = JSON.parse(JSON.stringify(this.state));
-                            this.state = remoteData;
+                            const keepLocalView = this.currentView;
+                            this.state = this.sanitizeStateData(remoteData);
+                            this.currentView = keepLocalView;
                             this.checkAndTriggerSpectatorTVAnimation(prevState, this.state);
                             this.renderAll();
                             if (showFeedback) this.showToast('Live Score Synced!', 'emerald');
@@ -1412,7 +1480,21 @@
                 const newMatch = newState.matches[newState.activeMatchIndex];
                 if (!newMatch) return;
                 const newInn = newMatch.innings[newMatch.currentInningsIndex];
-                if (!newInn || !newInn.ballLog || newInn.ballLog.length === 0) return;
+                if (!newInn) return;
+
+                // Check if Innings just started (Openers selected, 0 legal balls)
+                if (newInn.striker && newInn.currentBowler && newInn.legalBalls === 0 && (!newInn.ballLog || newInn.ballLog.length === 0)) {
+                    const startSig = `${newMatch.matchId}-START-INN-${newInn.inningsNumber}-${newInn.striker}`;
+                    if (this.lastInningsStartSignature !== startSig) {
+                        this.lastInningsStartSignature = startSig;
+                        if (this.spectatorAudioEnabled) {
+                            this.playIPLTrumpetFanfare(true);
+                        }
+                        this.showToast(`🎺 Play Ball! ${newInn.battingTeamName} Innings Underway!`, 'amber');
+                    }
+                }
+
+                if (!newInn.ballLog || newInn.ballLog.length === 0) return;
 
                 const latestBall = newInn.ballLog[0];
                 const sig = `${newMatch.matchId}-${newInn.inningsNumber}-${newInn.legalBalls}-${newInn.runs}-${newInn.wickets}-${latestBall.label}`;
@@ -1531,15 +1613,93 @@
                 localStorage.setItem(AUDIO_PREF_KEY, String(this.spectatorAudioEnabled));
                 this.updateAudioButtonUI();
                 if (this.spectatorAudioEnabled) {
-                    this.playBroadcastSound('FOUR');
-                    this.showToast('Stadium Crowd Roar & Broadcast Chimes Enabled (Saved)!', 'emerald');
+                    this.playIPLTrumpetFanfare(true);
+                    this.showToast('Audio Enabled! IPL Trumpet on Innings Start & Spectator Crowd Roar active.', 'emerald');
                 } else {
-                    this.showToast('Spectator Audio Muted.', 'amber');
+                    this.showToast('Audio Muted.', 'amber');
                 }
             },
 
+            playIPLTrumpetFanfare(forcePlay = false) {
+                if (!forcePlay && !this.spectatorAudioEnabled) return;
+                try {
+                    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                    const ctx = new AudioCtx();
+                    const now = ctx.currentTime;
+
+                    // Iconic 9-note IPL Brass Trumpet Call: G4 - C5 - E5 - G5 (hold) - E5 - G5 (long hold!)
+                    const fanfareNotes = [
+                        { f: 392.00, start: 0.00, dur: 0.14 }, // G4
+                        { f: 523.25, start: 0.16, dur: 0.14 }, // C5
+                        { f: 659.25, start: 0.32, dur: 0.14 }, // E5
+                        { f: 783.99, start: 0.48, dur: 0.34 }, // G5
+                        { f: 659.25, start: 0.86, dur: 0.16 }, // E5
+                        { f: 783.99, start: 1.05, dur: 0.65 }  // G5 (Grand Finish)
+                    ];
+
+                    fanfareNotes.forEach(n => {
+                        // Dual-oscillator brass synthesis (Sawtooth + Triangle + Bandpass Brass Formant)
+                        const osc1 = ctx.createOscillator();
+                        const osc2 = ctx.createOscillator();
+                        const brassFilter = ctx.createBiquadFilter();
+                        const noteGain = ctx.createGain();
+
+                        osc1.type = 'sawtooth';
+                        osc2.type = 'triangle';
+                        osc1.frequency.setValueAtTime(n.f, now + n.start);
+                        osc2.frequency.setValueAtTime(n.f * 1.003, now + n.start);
+
+                        brassFilter.type = 'lowpass';
+                        brassFilter.frequency.setValueAtTime(2400, now + n.start);
+
+                        noteGain.gain.setValueAtTime(0.001, now + n.start);
+                        noteGain.gain.linearRampToValueAtTime(0.24, now + n.start + 0.03);
+                        noteGain.gain.exponentialRampToValueAtTime(0.008, now + n.start + n.dur);
+
+                        osc1.connect(brassFilter);
+                        osc2.connect(brassFilter);
+                        brassFilter.connect(noteGain);
+                        noteGain.connect(ctx.destination);
+
+                        osc1.start(now + n.start);
+                        osc2.start(now + n.start);
+                        osc1.stop(now + n.start + n.dur + 0.03);
+                        osc2.stop(now + n.start + n.dur + 0.03);
+                    });
+
+                    // Subtle Stadium Crowd Swell Underneath the Trumpet
+                    const dur = 2.0;
+                    const bufferSize = Math.floor(ctx.sampleRate * dur);
+                    const noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+                    const output = noiseBuffer.getChannelData(0);
+                    let b0 = 0, b1 = 0, b2 = 0;
+                    for (let i = 0; i < bufferSize; i++) {
+                        const white = Math.random() * 2 - 1;
+                        b0 = 0.99765 * b0 + white * 0.0990460;
+                        b1 = 0.96300 * b1 + white * 0.2965164;
+                        b2 = 0.57000 * b2 + white * 1.0526913;
+                        output[i] = (b0 + b1 + b2 + white * 0.1848) * 0.04;
+                    }
+                    const whiteNoise = ctx.createBufferSource();
+                    whiteNoise.buffer = noiseBuffer;
+                    const filter = ctx.createBiquadFilter();
+                    filter.type = 'bandpass';
+                    filter.frequency.setValueAtTime(950, now);
+                    const crowdGain = ctx.createGain();
+                    crowdGain.gain.setValueAtTime(0.01, now);
+                    crowdGain.gain.linearRampToValueAtTime(0.22, now + 0.5);
+                    crowdGain.gain.exponentialRampToValueAtTime(0.008, now + dur);
+
+                    whiteNoise.connect(filter);
+                    filter.connect(crowdGain);
+                    crowdGain.connect(ctx.destination);
+                    whiteNoise.start(now);
+                } catch (e) {}
+            },
+
             playBroadcastSound(type) {
-                if (!this.spectatorAudioEnabled) return;
+                // Only play crowd roar on Spectator screens when Audio is enabled (no trumpet on 4/6, no scorer noise on 4/6)
+                if (!this.isSpectator || !this.spectatorAudioEnabled) return;
                 try {
                     const AudioCtx = window.AudioContext || window.webkitAudioContext;
                     const ctx = new AudioCtx();
@@ -1566,29 +1726,13 @@
 
                     const crowdGain = ctx.createGain();
                     crowdGain.gain.setValueAtTime(0.01, ctx.currentTime);
-                    crowdGain.gain.linearRampToValueAtTime(0.32, ctx.currentTime + 0.25);
+                    crowdGain.gain.linearRampToValueAtTime(0.34, ctx.currentTime + 0.25);
                     crowdGain.gain.exponentialRampToValueAtTime(0.008, ctx.currentTime + duration);
 
                     whiteNoise.connect(filter);
                     filter.connect(crowdGain);
                     crowdGain.connect(ctx.destination);
                     whiteNoise.start(ctx.currentTime);
-
-                    const notes = type === 'SIX' || type === 'CENTURY' ? [523.25, 659.25, 783.99, 1046.5]
-                                : type === 'WICKET' ? [380, 290, 210, 145]
-                                : [440, 554.37, 659.25];
-                    notes.forEach((freq, i) => {
-                        const osc = ctx.createOscillator();
-                        const gain = ctx.createGain();
-                        osc.type = type === 'WICKET' ? 'sawtooth' : 'triangle';
-                        osc.frequency.value = freq;
-                        gain.gain.setValueAtTime(0.14, ctx.currentTime + i * 0.11);
-                        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i * 0.11 + 0.36);
-                        osc.connect(gain);
-                        gain.connect(ctx.destination);
-                        osc.start(ctx.currentTime + i * 0.11);
-                        osc.stop(ctx.currentTime + i * 0.11 + 0.38);
-                    });
                 } catch (e) {}
             },
 
@@ -1606,12 +1750,18 @@
             navigate(view) {
                 const matchViews = ['match', 'scorecard', 'analytics'];
                 if (matchViews.includes(view) && !this.getActiveMatch()) {
-                    this.showToast('Start or select a match first!', 'amber');
-                    view = 'hub';
+                    if (this.state && this.state.matches && this.state.matches.length > 0) {
+                        this.state.activeMatchIndex = this.state.matches.length - 1;
+                    } else {
+                        this.showToast('Start or select a match first!', 'amber');
+                        view = 'hub';
+                    }
                 }
                 this.currentView = view;
-                this.state.lastActiveView = view;
-                this.saveState();
+                if (!this.isSpectator) {
+                    this.state.lastActiveView = view;
+                    this.saveState();
+                }
 
                 ['hub', 'match', 'scorecard', 'analytics'].forEach(v => {
                     const sec = document.getElementById(`view-${v}`);
@@ -1654,7 +1804,10 @@
             },
 
             getActiveMatch() {
-                if (!this.state || !this.state.matches || this.state.activeMatchIndex < 0) return null;
+                if (!this.state || !Array.isArray(this.state.matches) || this.state.matches.length === 0) return null;
+                if (typeof this.state.activeMatchIndex !== 'number' || this.state.activeMatchIndex < 0 || this.state.activeMatchIndex >= this.state.matches.length) {
+                    this.state.activeMatchIndex = this.state.matches.length - 1;
+                }
                 return this.state.matches[this.state.activeMatchIndex] || null;
             },
 
@@ -2000,6 +2153,8 @@
                 }
 
                 this.closeModal('modal-openers');
+                this.playIPLTrumpetFanfare(true);
+                this.showToast(`🎺 Play Ball! ${inn.striker} & ${inn.nonStriker} open the batting!`, 'emerald');
                 this.saveState();
                 this.navigate('match');
             },
@@ -2103,6 +2258,11 @@
                 }
 
                 this.pushUndoSnapshot(match);
+
+                // If previous 6-ball over was sitting in `thisOver`, clear it right as the 1st ball of the new over is bowled
+                if (inn.legalBalls > 0 && inn.legalBalls % 6 === 0 && inn.thisOver.length >= 6) {
+                    inn.thisOver = [];
+                }
 
                 const extraMode = this.activeExtraMode;
                 this.activeExtraMode = null;
@@ -2296,6 +2456,11 @@
 
                 this.pushUndoSnapshot(match);
 
+                // Clear previous over's 6 balls when the first ball of the new over is bowled
+                if (inn.legalBalls > 0 && inn.legalBalls % 6 === 0 && inn.thisOver.length >= 6) {
+                    inn.thisOver = [];
+                }
+
                 const bowlerStats = inn.bowlStats[inn.currentBowler];
                 const disStats = inn.batStats[dismissedBatter];
 
@@ -2483,7 +2648,8 @@
                     wickets: inn.wickets,
                     balls: [...inn.thisOver]
                 });
-                inn.thisOver = [];
+                // Keep all 6 balls in `inn.thisOver` so Scorer and Spectator see the 6th ball!
+                // It will automatically clear when the 1st ball of the next over is bowled or when the next bowler is confirmed.
             },
 
             openBowlerModal() {
@@ -2497,7 +2663,11 @@
                     const oversBowled = Math.floor((st?.balls || 0) / 6);
                     const isSame = p === inn.currentBowler;
                     const quotaFull = oversBowled >= match.maxBowlerOvers;
-                    const tag = quotaFull ? ` (Quota ${oversBowled}/${match.maxBowlerOvers} ov full)` : ` (${oversBowled}/${match.maxBowlerOvers} ov)`;
+                    const tag = isSame
+                        ? ` (Bowled Previous Over)`
+                        : quotaFull
+                        ? ` [MAX QUOTA ${oversBowled}/${match.maxBowlerOvers} OV REACHED]`
+                        : ` (${oversBowled}/${match.maxBowlerOvers} ov)`;
                     return `<option value="${p}" ${!isSame && !quotaFull ? 'selected' : ''}>${p}${tag}</option>`;
                 }).join('');
 
@@ -2505,9 +2675,18 @@
             },
 
             confirmNextBowler() {
+                const match = this.getActiveMatch();
                 const inn = this.getActiveInnings();
                 if (!inn) return;
-                inn.currentBowler = document.getElementById('nextBowlerSelect').value;
+                const chosen = document.getElementById('nextBowlerSelect').value;
+                if (chosen === inn.currentBowler && inn.bowlingRoster.length > 1) {
+                    this.showToast('Note: Same bowler selected for consecutive overs!', 'amber');
+                }
+                const st = inn.bowlStats[chosen];
+                if (match && st && Math.floor(st.balls / 6) >= match.maxBowlerOvers) {
+                    this.showToast(`Warning: ${chosen} has already reached the ${match.maxBowlerOvers}-over quota!`, 'amber');
+                }
+                inn.currentBowler = chosen;
                 this.closeModal('modal-bowler');
                 this.saveState();
                 this.renderAll();
@@ -2516,7 +2695,6 @@
             confirmEndFirstInnings() {
                 const match = this.getActiveMatch();
                 if (!match || match.currentInningsIndex !== 0) return;
-                if (!confirm('End 1st Innings now and start the 2nd Innings chase?')) return;
                 this.openOpenersModal(1);
             },
 
@@ -3046,15 +3224,18 @@
                 const targetBox = document.getElementById('liveTargetBox');
                 const eqText = document.getElementById('liveChaseEquationText');
                 const btnInningsBreak = document.getElementById('btnTriggerInningsBreak');
+                const winProbContainer = document.getElementById('liveWinProbContainer');
 
                 if (match.currentInningsIndex === 0) {
                     projBox.classList.remove('hidden');
                     targetBox.classList.add('hidden');
+                    if (winProbContainer) winProbContainer.classList.add('hidden');
                     eqText.textContent = match.status === 'completed' ? match.resultText : '';
                     if (btnInningsBreak && !this.isSpectator) btnInningsBreak.classList.remove('hidden');
                 } else {
                     projBox.classList.add('hidden');
                     targetBox.classList.remove('hidden');
+                    if (winProbContainer) winProbContainer.classList.remove('hidden');
                     if (btnInningsBreak) btnInningsBreak.classList.add('hidden');
 
                     const target = match.innings[0].runs + 1;
@@ -3067,6 +3248,25 @@
                     eqText.textContent = match.status === 'completed'
                         ? match.resultText
                         : `${inn.battingTeamName} needs ${runsNeeded} run${runsNeeded === 1 ? '' : 's'} in ${ballsRem} ball${ballsRem === 1 ? '' : 's'}`;
+
+                    // Calculate Live Win Probability for 2nd Innings Chase
+                    let chaseWinProb = 50;
+                    if (runsNeeded <= 0) {
+                        chaseWinProb = 100;
+                    } else if (ballsRem <= 0 || inn.wickets >= this.getMaxPossibleWickets(match, inn)) {
+                        chaseWinProb = 0;
+                    } else {
+                        const rrrNum = (runsNeeded / ballsRem) * 6;
+                        const wktsLeft = Math.max(1, this.getMaxPossibleWickets(match, inn) - inn.wickets);
+                        const resourceFactor = (ballsRem / 6) * 8.5 + wktsLeft * 3.5;
+                        const diff = resourceFactor - runsNeeded - (rrrNum > 12 ? (rrrNum - 12) * 2.2 : 0);
+                        chaseWinProb = Math.min(96, Math.max(4, Math.round(50 + diff * 1.8)));
+                    }
+                    const defendWinProb = 100 - chaseWinProb;
+                    document.getElementById('winProbTeamALabel').textContent = `${inn.battingTeamName}: ${chaseWinProb}%`;
+                    document.getElementById('winProbTeamBLabel').textContent = `${inn.bowlingTeamName}: ${defendWinProb}%`;
+                    document.getElementById('winProbBarLeft').style.width = `${chaseWinProb}%`;
+                    document.getElementById('winProbBarRight').style.width = `${defendWinProb}%`;
                 }
 
                 // Partnership & Active Batters
@@ -3109,7 +3309,7 @@
                     `;
                 }
 
-                // This Over Chips
+                // This Over Chips (Keeps 6th ball visible!) + Last Over Summary Strip
                 const chipStyles = {
                     slate: 'bg-slate-800 border-slate-700 text-slate-200',
                     emerald: 'bg-emerald-500/20 border-emerald-400 text-emerald-300 font-black',
@@ -3118,7 +3318,13 @@
                     rose: 'bg-rose-600 border-rose-400 text-white font-black',
                     sky: 'bg-sky-500/20 border-sky-400 text-sky-300 font-bold'
                 };
+                const thisOverLabel = document.getElementById('thisOverLabelText');
                 const thisOverEl = document.getElementById('thisOverBallsContainer');
+                const isCompletedOverHold = inn.legalBalls > 0 && inn.legalBalls % 6 === 0 && inn.thisOver.length >= 6;
+                if (thisOverLabel) {
+                    thisOverLabel.textContent = isCompletedOverHold ? `Over ${Math.floor(inn.legalBalls / 6)} Complete:` : 'This Over:';
+                }
+
                 if (inn.thisOver.length === 0) {
                     thisOverEl.innerHTML = `<span class="text-xs text-slate-500 italic">New over starting...</span>`;
                 } else {
@@ -3127,6 +3333,26 @@
                             ${b.label}
                         </span>
                     `).join('');
+                }
+
+                // Last Over Summary Strip
+                const lastOverStrip = document.getElementById('lastOverSummaryStrip');
+                if (lastOverStrip) {
+                    const histLen = inn.oversHistory ? inn.oversHistory.length : 0;
+                    const lastOverObj = isCompletedOverHold
+                        ? (histLen >= 2 ? inn.oversHistory[histLen - 2] : null)
+                        : (histLen >= 1 ? inn.oversHistory[histLen - 1] : null);
+
+                    if (lastOverObj && Array.isArray(lastOverObj.balls) && lastOverObj.balls.length > 0) {
+                        const ballsText = lastOverObj.balls.map(b => `<span class="score-font px-1.5 py-0.5 rounded bg-slate-800 text-slate-200 font-bold">${b.label}</span>`).join(' ');
+                        lastOverStrip.classList.remove('hidden');
+                        lastOverStrip.innerHTML = `
+                            <span class="font-semibold text-slate-400 shrink-0">Last Over (Ov ${lastOverObj.overNum} • ${lastOverObj.bowler}):</span>
+                            <div class="flex items-center gap-1">${ballsText}</div>
+                        `;
+                    } else {
+                        lastOverStrip.classList.add('hidden');
+                    }
                 }
 
                 // Head-to-Head Batter vs Bowler Rivalry Matchup
@@ -3204,6 +3430,26 @@
                         `;
                     }).join('') : '<span class="text-xs text-slate-500">No partnerships recorded yet</span>';
 
+                    // Over-by-Over Ball Breakdown
+                    let prevOvRuns = 0;
+                    const oversBreakdownHTML = (inn.oversHistory || []).length > 0
+                        ? inn.oversHistory.map(oh => {
+                            const runsInThisOv = oh.runs - prevOvRuns;
+                            prevOvRuns = oh.runs;
+                            const chips = (oh.balls || []).map(b => `<span class="score-font px-2 py-0.5 rounded bg-slate-800 border border-slate-700 text-[11px] font-bold text-slate-200">${b.label}</span>`).join('');
+                            return `
+                                <div class="p-2.5 rounded-xl bg-slate-900/70 border border-slate-800 flex flex-wrap items-center justify-between gap-2 text-xs">
+                                    <div>
+                                        <span class="font-bold text-emerald-400">Over ${oh.overNum}</span>
+                                        <span class="text-slate-400 ml-1">(${oh.bowler})</span>
+                                    </div>
+                                    <div class="flex items-center gap-1.5 flex-wrap">${chips}</div>
+                                    <span class="score-font font-bold text-white">${runsInThisOv} runs (${oh.runs}/${oh.wickets})</span>
+                                </div>
+                            `;
+                        }).join('')
+                        : '<span class="text-xs text-slate-500">No completed overs yet</span>';
+
                     return `
                         <div class="glass-card rounded-2xl p-4 sm:p-5 space-y-4">
                             <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-3">
@@ -3234,9 +3480,13 @@
                                     <tbody class="divide-y divide-slate-800/60">
                                         ${batters.map(b => {
                                             const sr = b.balls > 0 ? ((b.runs / b.balls) * 100).toFixed(1) : '0.0';
+                                            const isDuck = b.status === 'out' && b.runs === 0;
+                                            const duckBadge = isDuck
+                                                ? (b.balls === 1 ? ' <span class="px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 text-[10px] font-bold" title="Golden Duck!">🦆 Golden Duck</span>' : ' <span class="px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-300 text-[10px] font-bold" title="Duck">🦆</span>')
+                                                : '';
                                             return `
                                                 <tr class="${b.status === 'batting' ? 'bg-emerald-500/5 font-semibold text-white' : 'text-slate-300'}">
-                                                    <td class="py-2 font-bold text-white">${b.name} ${b.status === 'batting' ? '<span class="text-emerald-400">*</span>' : ''}</td>
+                                                    <td class="py-2 font-bold text-white">${b.name} ${b.status === 'batting' ? '<span class="text-emerald-400">*</span>' : ''}${duckBadge}</td>
                                                     <td class="py-2 text-xs text-slate-400">${b.outDesc}</td>
                                                     <td class="py-2 text-right score-font font-bold text-emerald-300">${b.runs}</td>
                                                     <td class="py-2 text-right score-font">${b.balls}</td>
@@ -3295,6 +3545,17 @@
                                     </tbody>
                                 </table>
                             </div>
+
+                            <!-- Over-by-Over Ball Breakdown Accordion -->
+                            <details class="pt-2 border-t border-slate-800 group">
+                                <summary class="cursor-pointer text-[11px] font-bold uppercase text-amber-400 flex items-center justify-between">
+                                    <span><i class="fa-solid fa-list-ol mr-1"></i> Over-by-Over Ball Breakdown (${(inn.oversHistory || []).length} Completed Overs)</span>
+                                    <span class="text-slate-400 group-open:rotate-180 transition-transform"><i class="fa-solid fa-chevron-down"></i></span>
+                                </summary>
+                                <div class="mt-2.5 space-y-2">
+                                    ${oversBreakdownHTML}
+                                </div>
+                            </details>
                         </div>
                     `;
                 }).join('');
@@ -3812,6 +4073,35 @@ ${match.innings.map(inn => `
                 this.showToast('WhatsApp Broadcast PNG Card downloaded!', 'sky');
             },
 
+            copyWhatsAppMatchSummaryText() {
+                const match = this.getActiveMatch();
+                if (!match) return;
+                const ratings = this.computeMatchPlayerRatings(match);
+                const mvp = ratings[0];
+                const bestBat = [...ratings].sort((a, b) => b.batRuns - a.batRuns)[0];
+                const bestBowl = [...ratings].sort((a, b) => b.bowlWickets - a.bowlWickets || a.bowlRuns - b.bowlRuns)[0];
+                const i1 = match.innings[0];
+                const i2 = match.innings[1];
+
+                const summary = [
+                    `🏏 *${this.state.seriesName} — Match ${match.matchNumber}*`,
+                    `📍 Venue: ${match.venue} (${match.pitch})`,
+                    ``,
+                    `🔹 *${i1.battingTeamName}:* ${i1.runs}/${i1.wickets} (${this.formatOvers(i1.legalBalls)} ov)`,
+                    `🔹 *${i2.battingTeamName}:* ${i2.runs}/${i2.wickets} (${this.formatOvers(i2.legalBalls)} ov)`,
+                    ``,
+                    `🏆 *Result:* ${match.resultText || 'Match In Progress'}`,
+                    mvp ? `👑 *Player of the Match:* ${mvp.name} (Rating ${mvp.rating10.toFixed(1)}/10)` : '',
+                    bestBat ? `💥 *Best Batter:* ${bestBat.name} — ${bestBat.batRuns} (${bestBat.batBalls})` : '',
+                    bestBowl ? `🎯 *Best Bowler:* ${bestBowl.name} — ${bestBowl.bowlWickets}/${bestBowl.bowlRuns}` : '',
+                    ``,
+                    `✨ _Scored on CricPulse Pro (Crafted by Cherry)_`
+                ].filter(Boolean).join('\n');
+
+                navigator.clipboard?.writeText(summary);
+                this.showToast('Formatted WhatsApp Match Summary copied to clipboard!', 'emerald');
+            },
+
             exportSeriesJSON() {
                 const blob = new Blob([JSON.stringify(this.state, null, 2)], { type: 'application/json' });
                 const a = document.createElement('a');
@@ -3842,7 +4132,6 @@ ${match.innings.map(inn => `
             },
 
             resetAllStorage() {
-                if (!confirm('Are you sure you want to clear the current Series from local storage? (All-Time Career Hall of Fame will be kept)')) return;
                 localStorage.removeItem(STORAGE_KEY);
                 this.state = this.createDefaultSeriesState();
                 this.saveState();
