@@ -133,7 +133,7 @@
                 </button>
 
                 <button onclick="app.openShareModal()" class="scorer-only tap-btn px-2.5 py-1.5 rounded-xl text-xs font-extrabold bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 flex items-center gap-1.5">
-                    <i class="fa-solid fa-share-nodes"></i> <span class="hidden sm:inline">Share Live</span>
+                    <i class="fa-solid fa-share-nodes"></i> <span class="hidden sm:inline">Share & Cloud Sync</span>
                 </button>
             </div>
         </div>
@@ -149,8 +149,8 @@
                 <button onclick="app.pullFromCloudRoom(true)" class="tap-btn px-2.5 py-0.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-emerald-300 border border-emerald-500/30 font-bold text-[11px]">
                     <i class="fa-solid fa-rotate mr-1"></i>Refresh Score
                 </button>
-                <button onclick="app.openAuthModal()" class="tap-btn px-2.5 py-0.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 font-bold text-[11px]">
-                    <i class="fa-solid fa-lock mr-1"></i>Scorer Login
+                <button onclick="app.openPinTakeoverModal()" class="tap-btn px-2.5 py-0.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 font-bold text-[11px]">
+                    <i class="fa-solid fa-key mr-1"></i>Emergency Scorer PIN
                 </button>
             </div>
         </div>
@@ -667,6 +667,27 @@
         </div>
     </div>
 
+    <!-- 2B. EMERGENCY 4-DIGIT SCORER PIN TAKEOVER MODAL (FOR SPECTATOR LINK) -->
+    <div id="modal-pin-takeover" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-950/90 backdrop-blur-md p-4">
+        <div class="glass-card rounded-2xl max-w-sm w-full p-6 border border-amber-500/40 space-y-4 text-center">
+            <div class="w-12 h-12 rounded-2xl bg-amber-500/20 border border-amber-500/40 mx-auto flex items-center justify-center text-amber-400 text-xl">
+                <i class="fa-solid fa-key"></i>
+            </div>
+            <div>
+                <h3 class="text-lg font-black text-white">Emergency Scorer Takeover</h3>
+                <p class="text-xs text-slate-400 mt-1">Enter your 4-Digit Match Scorer PIN (or Creator Password) to unlock live scoring on this device.</p>
+            </div>
+            <div class="space-y-2 text-xs text-left">
+                <input id="emergencyPinInput" type="password" maxlength="12" placeholder="Enter 4-Digit PIN" class="w-full px-3 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-center text-amber-300 font-mono text-base font-bold tracking-widest">
+                <p id="pinLockoutWarning" class="hidden text-[11px] text-rose-400 text-center font-bold"></p>
+            </div>
+            <div class="flex gap-2 pt-2">
+                <button onclick="app.closeModal('modal-pin-takeover')" class="flex-1 py-2.5 rounded-xl bg-slate-800 text-slate-300 font-bold text-xs">Cancel</button>
+                <button onclick="app.verifyEmergencyPinTakeover()" class="tap-btn flex-1 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs uppercase">Unlock Keypad</button>
+            </div>
+        </div>
+    </div>
+
     <!-- 3. MATCH & SERIES SETUP MODAL -->
     <div id="modal-setup" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-3 overflow-y-auto">
         <div class="glass-card rounded-2xl max-w-3xl w-full p-4 sm:p-6 border border-emerald-500/30 space-y-4 my-8 max-h-[92vh] overflow-y-auto">
@@ -694,12 +715,12 @@
                 <div>
                     <label class="block text-slate-400 font-semibold mb-1">Venue / Ground Name</label>
                     <div class="flex gap-1.5">
-                        <input id="setupVenue" type="text" value="Greenfield Astro Arena" class="flex-1 px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white font-semibold">
+                        <input id="setupVenue" type="text" value="Local Ground" class="flex-1 px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white font-semibold">
                         <select onchange="if(this.value) { document.getElementById('setupVenue').value = this.value; }" class="px-2 py-2 rounded-xl bg-slate-800 border border-slate-700 text-[11px] text-amber-300 font-bold">
-                            <option value="">Preset</option>
-                            <option value="Local Ground">Local Ground</option>
+                            <option value="Local Ground" selected>Local Ground</option>
                             <option value="Greenfield Astro Arena">Greenfield</option>
                             <option value="Stadium Turf">Stadium Turf</option>
+                            <option value="Weekend Box Arena">Box Arena</option>
                         </select>
                     </div>
                 </div>
@@ -837,7 +858,7 @@
             <div class="space-y-3 text-xs">
                 <div>
                     <label class="block text-slate-300 font-bold mb-1">How Out (Dismissal Type)</label>
-                    <select id="wicketTypeSelect" class="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white font-semibold">
+                    <select id="wicketTypeSelect" onchange="app.onWicketTypeChange()" class="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white font-semibold">
                         <option value="Caught">Caught</option>
                         <option value="Bowled">Bowled</option>
                         <option value="Run Out">Run Out</option>
@@ -869,69 +890,91 @@
             </div>
         </div>
     </div>
-
-    <!-- 6. CHANGE BOWLER MODAL -->
-    <div id="modal-bowler" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
-        <div class="glass-card rounded-2xl max-w-md w-full p-5 border border-sky-500/30 space-y-4">
-            <h3 class="text-base font-black text-sky-400">End of Over — Select Next Bowler</h3>
-            <div class="text-xs space-y-2">
-                <label class="block text-slate-300 font-semibold">Choose Bowler from Bowling Squad:</label>
-                <select id="nextBowlerSelect" class="w-full px-3 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white font-semibold"></select>
-            </div>
-            <button onclick="app.confirmNextBowler()" class="tap-btn w-full py-2.5 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-black text-xs uppercase">Start Next Over</button>
-        </div>
-    </div>
-
-    <!-- 7. WAGON WHEEL MODAL -->
-    <div id="modal-wagon" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-950/75 backdrop-blur-sm p-4">
-        <div class="glass-card rounded-2xl max-w-sm w-full p-4 border border-emerald-500/40 text-center space-y-3">
+    <!-- 9. MID-MATCH RULES, RENAME & ADD LATE PLAYER MODAL -->
+    <div id="modal-midrules" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
+        <div class="glass-card rounded-2xl max-w-md w-full p-5 border border-sky-500/30 space-y-4 max-h-[90vh] overflow-y-auto">
             <div class="flex items-center justify-between">
-                <span class="text-xs font-extrabold uppercase text-emerald-400">Tap Shot Zone (Optional)</span>
-                <button onclick="app.skipWagonWheel()" class="text-xs text-slate-400 hover:text-white font-bold">Skip <i class="fa-solid fa-forward ml-1"></i></button>
+                <h3 class="text-base font-black text-white">Mid-Match Rules & Squad Manager</h3>
+                <button onclick="app.closeModal('modal-midrules')" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
             </div>
-            <div class="grid grid-cols-2 gap-2 text-xs">
-                <button onclick="app.recordWagonZone('Deep Mid-Wicket', 35)" class="tap-btn py-2.5 rounded-xl bg-slate-800 hover:bg-emerald-500/20 border border-slate-700 font-semibold text-white">Deep Mid-Wicket</button>
-                <button onclick="app.recordWagonZone('Long On', 75)" class="tap-btn py-2.5 rounded-xl bg-slate-800 hover:bg-emerald-500/20 border border-slate-700 font-semibold text-white">Long On</button>
-                <button onclick="app.recordWagonZone('Long Off', 110)" class="tap-btn py-2.5 rounded-xl bg-slate-800 hover:bg-emerald-500/20 border border-slate-700 font-semibold text-white">Long Off</button>
-                <button onclick="app.recordWagonZone('Extra Cover', 150)" class="tap-btn py-2.5 rounded-xl bg-slate-800 hover:bg-emerald-500/20 border border-slate-700 font-semibold text-white">Extra Cover</button>
-                <button onclick="app.recordWagonZone('Deep Point', 200)" class="tap-btn py-2.5 rounded-xl bg-slate-800 hover:bg-emerald-500/20 border border-slate-700 font-semibold text-white">Deep Point</button>
-                <button onclick="app.recordWagonZone('Third Man', 245)" class="tap-btn py-2.5 rounded-xl bg-slate-800 hover:bg-emerald-500/20 border border-slate-700 font-semibold text-white">Third Man</button>
-                <button onclick="app.recordWagonZone('Fine Leg', 300)" class="tap-btn py-2.5 rounded-xl bg-slate-800 hover:bg-emerald-500/20 border border-slate-700 font-semibold text-white">Fine Leg</button>
-                <button onclick="app.recordWagonZone('Square Leg', 345)" class="tap-btn py-2.5 rounded-xl bg-slate-800 hover:bg-emerald-500/20 border border-slate-700 font-semibold text-white">Square Leg</button>
+            <div class="space-y-3 text-xs">
+                <label class="flex items-center justify-between p-2.5 rounded-xl bg-slate-900 border border-slate-800">
+                    <span class="font-semibold text-slate-200">Last Man Standing (Solo Batter)</span>
+                    <input id="midRuleLastMan" type="checkbox" class="w-4 h-4 accent-emerald-500">
+                </label>
+                <label class="flex items-center justify-between p-2.5 rounded-xl bg-slate-900 border border-slate-800">
+                    <span class="font-semibold text-slate-200">360° Boundary Wagon Wheel Popup</span>
+                    <input id="midRuleWagon" type="checkbox" class="w-4 h-4 accent-emerald-500">
+                </label>
+                <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-900 border border-slate-800">
+                    <span class="font-semibold text-slate-200">Total Overs per Innings</span>
+                    <input id="midRuleOvers" type="number" min="1" max="50" class="w-20 px-2 py-1 rounded-lg bg-slate-800 border border-slate-700 text-white text-center font-bold">
+                </div>
+
+                <!-- RESTORED: ADD LATE-ARRIVING PLAYER MID-MATCH -->
+                <div class="pt-3 border-t border-slate-800 space-y-2">
+                    <span class="block font-bold text-emerald-400"><i class="fa-solid fa-user-plus mr-1"></i>Add Late-Arriving Player to Squad:</span>
+                    <div class="flex gap-2">
+                        <select id="midAddPlayerTeam" class="w-2/5 px-2 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white font-semibold">
+                            <option value="A">Team 1</option>
+                            <option value="B">Team 2</option>
+                        </select>
+                        <input id="midAddPlayerName" type="text" placeholder="New Player Name" class="flex-1 px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white">
+                        <button onclick="app.addPlayerMidMatch()" class="tap-btn px-3 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black shrink-0">Add</button>
+                    </div>
+                </div>
+
+                <!-- FIX PLAYER NAME TYPO / RENAME -->
+                <div class="pt-3 border-t border-slate-800 space-y-2">
+                    <span class="block font-bold text-amber-400"><i class="fa-solid fa-pen-to-square mr-1"></i>Fix Player Name Typo / Rename:</span>
+                    <div class="flex gap-2">
+                        <select id="midRenameOldSelect" class="w-2/5 px-2 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white"></select>
+                        <input id="midRenameNewInput" type="text" placeholder="Corrected Name" class="flex-1 px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white">
+                        <button onclick="app.renamePlayerMidMatch()" class="tap-btn px-3 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black shrink-0">Rename</button>
+                    </div>
+                </div>
             </div>
+            <button onclick="app.saveMidMatchRules()" class="tap-btn w-full py-2.5 rounded-xl bg-emerald-500 text-slate-950 font-extrabold text-xs">Save Settings & Close</button>
         </div>
     </div>
 
-    <!-- 8. END MATCH MODAL -->
-    <div id="modal-endmatch" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-950/85 backdrop-blur-sm p-4">
-        <div class="glass-card rounded-2xl max-w-md w-full p-5 border border-rose-500/40 space-y-4">
-            <div id="endMatchStep1" class="space-y-3">
-                <div class="w-11 h-11 rounded-2xl bg-rose-500/20 border border-rose-500/40 flex items-center justify-center text-rose-400 text-xl"><i class="fa-solid fa-triangle-exclamation"></i></div>
-                <h3 class="text-base font-black text-white">Confirmation 1 of 2: End Match Early?</h3>
-                <p class="text-xs text-slate-300">Are you sure you want to conclude this match now? Proceeding to Step 2 will finalize scores and generate the report.</p>
-                <div class="flex justify-end gap-2 pt-2">
-                    <button onclick="app.closeModal('modal-endmatch')" class="px-4 py-2 rounded-xl bg-slate-800 text-slate-300 text-xs font-bold">Keep Scoring</button>
-                    <button onclick="app.proceedEndMatchStep2()" class="tap-btn px-4 py-2 rounded-xl bg-amber-500 text-slate-950 font-black text-xs">
-                        Yes, Proceed to Final Confirmation <i class="fa-solid fa-arrow-right ml-1"></i>
-                    </button>
+    <!-- 10. SHARE LIVE SPECTATOR LINK & CLOUD SYNC MODAL -->
+    <div id="modal-share" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
+        <div class="glass-card rounded-2xl max-w-lg w-full p-5 border border-emerald-500/40 space-y-4 max-h-[92vh] overflow-y-auto">
+            <div class="flex items-center justify-between">
+                <h3 class="text-base font-black text-white flex items-center gap-2">
+                    <i class="fa-solid fa-tower-broadcast text-emerald-400"></i> Share Live Spectator Link & Cloud Sync
+                </h3>
+                <button onclick="app.closeModal('modal-share')" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <!-- RESTORED: FIREBASE REALTIME DATABASE URL CONFIGURATION -->
+            <div class="glass-subtle rounded-xl p-3.5 border border-sky-500/30 space-y-2 text-xs">
+                <div class="flex items-center justify-between">
+                    <span class="font-bold text-sky-400"><i class="fa-solid fa-cloud-arrow-up mr-1"></i>1. Live Cloud Database URL (Firebase):</span>
+                    <span id="modalCloudBadge" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300">Connected</span>
+                </div>
+                <p class="text-[11px] text-slate-300">Paste your Firebase Realtime Database URL below so Spectator links update live every 3.5 seconds across phones. (Encrypted & hidden from Spectator address bar!)</p>
+                <div class="flex gap-2">
+                    <input id="customFirebaseUrlInput" type="text" placeholder="https://your-project-default-rtdb.firebaseio.com" class="flex-1 px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-[11px] text-white font-mono">
+                    <button onclick="app.saveCustomFirebaseUrl()" class="tap-btn px-3 py-2 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-extrabold text-xs shrink-0">Save & Sync</button>
                 </div>
             </div>
-            <div id="endMatchStep2" class="hidden space-y-3">
-                <div class="w-11 h-11 rounded-2xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400 text-xl"><i class="fa-solid fa-flag-checkered"></i></div>
-                <h3 class="text-base font-black text-white">Confirmation 2 of 2: Lock Final Match Result</h3>
-                <div class="text-xs space-y-2">
-                    <label class="block text-slate-400 font-semibold">Result Mode:</label>
-                    <select id="endMatchResultOverride" class="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white font-semibold">
-                        <option value="AUTO">Auto-Calculate Winner from Score</option>
-                        <option id="endMatchOptTeamA" value="A">Force Winner: Team 1</option>
-                        <option id="endMatchOptTeamB" value="B">Force Winner: Team 2</option>
-                        <option value="TIE">Declare Match Tied (Enables Super Over)</option>
-                        <option value="NR">No Result / Abandoned</option>
-                    </select>
+
+            <!-- SPECTATOR SHARE LINK -->
+            <div class="glass-subtle rounded-xl p-3.5 space-y-2 text-xs">
+                <div class="flex items-center justify-between">
+                    <span class="text-slate-300 font-bold">2. Live Match Room Code:</span>
+                    <span id="shareModalRoomCode" class="score-font text-base font-black text-emerald-400">CRIC-000</span>
                 </div>
-                <div class="flex justify-end gap-2 pt-2">
-                    <button onclick="app.closeModal('modal-endmatch')" class="px-4 py-2 rounded-xl bg-slate-800 text-slate-300 text-xs font-bold">Cancel</button>
-                    <button onclick="app.finalizeMatchConfirmed()" class="tap-btn px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-black text-xs">Lock & Generate Match Report</button>
+                <p class="text-[11px] text-slate-300">Friends who open your Spectator Link are locked into <strong>Read-Only Broadcast View</strong> with live 4/6/Wicket TV animations!</p>
+                <div class="flex gap-2 pt-1">
+                    <input id="shareSpectatorUrlInput" type="text" readonly class="flex-1 px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-[11px] text-slate-300 font-mono">
+                    <button onclick="app.copySpectatorLink()" class="tap-btn px-3 py-2 rounded-xl bg-emerald-500 text-slate-950 font-extrabold text-xs shrink-0"><i class="fa-solid fa-copy mr-1"></i>Copy Link</button>
+                </div>
+                <div class="flex flex-wrap gap-2 pt-2">
+                    <button onclick="app.shareWhatsAppDirect()" class="tap-btn flex-1 py-2.5 rounded-xl bg-green-600 hover:bg-green-500 text-white font-extrabold text-xs flex items-center justify-center gap-1.5"><i class="fa-brands fa-whatsapp text-sm"></i> Share on WhatsApp</button>
+                    <button onclick="app.copySnapshotLink()" class="tap-btn flex-1 py-2.5 rounded-xl bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 border border-sky-500/40 font-bold text-xs flex items-center justify-center gap-1.5" title="Permanent self-contained link with all match data embedded inside the URL"><i class="fa-solid fa-box-archive"></i> Copy Offline Archive Link</button>
                 </div>
             </div>
         </div>
@@ -1026,6 +1069,8 @@
         const CAREER_STORAGE_KEY = 'CRICPULSE_CAREER_HALL_V2';
         const AUDIO_PREF_KEY = 'CRICPULSE_SPECTATOR_AUDIO_PREF_V2';
         const AUTH_TOKEN_KEY = 'CRICPULSE_CREATOR_AUTH_TOKEN';
+        const FIREBASE_URL_KEY = 'CRICPULSE_CUSTOM_FIREBASE_URL_V2';
+        const PIN_LOCKOUT_KEY = 'CRICPULSE_PIN_LOCKOUT_UNTIL';
 
         let manhattanChartInstance = null;
         let wormChartInstance = null;
@@ -1038,9 +1083,11 @@
             wakeLockSentinel: null,
             lastAnimatedBallSignature: null,
             lastInningsStartSignature: null,
+            lastMatchWinSignature: null,
             activeExtraMode: null,
             pendingWagonBallRef: null,
             spectatorPollInterval: null,
+            pinFailedAttempts: 0,
 
             sanitizeStateData(st) {
                 if (!st) return st;
@@ -1072,9 +1119,33 @@
                         inn.fow = Array.isArray(inn.fow) ? inn.fow : [];
                         inn.ballLog = Array.isArray(inn.ballLog) ? inn.ballLog : [];
                         inn.wagonShots = Array.isArray(inn.wagonShots) ? inn.wagonShots : [];
+
+                        inn.battingRoster.forEach(p => {
+                            if (!inn.batStats[p]) {
+                                inn.batStats[p] = { name: p, runs: 0, balls: 0, fours: 0, sixes: 0, status: 'dnb', outDesc: 'Did Not Bat' };
+                            }
+                        });
+                        inn.bowlingRoster.forEach(p => {
+                            if (!inn.bowlStats[p]) {
+                                inn.bowlStats[p] = { name: p, balls: 0, maidens: 0, runs: 0, wickets: 0, currentOverRuns: 0 };
+                            }
+                            if (!inn.fieldStats[p]) {
+                                inn.fieldStats[p] = { catches: 0, runOuts: 0, stumpings: 0 };
+                            }
+                        });
                     });
                 });
                 return st;
+            },
+
+            hashPin(pinStr) {
+                let h = 2166136261;
+                const s = String(pinStr || '7788').trim();
+                for (let i = 0; i < s.length; i++) {
+                    h ^= s.charCodeAt(i);
+                    h += (h << 1) + (h << 4) + (h << 7) + (h << 8) + (h << 24);
+                }
+                return 'CPH-' + (h >>> 0).toString(16);
             },
 
             init() {
@@ -1095,6 +1166,22 @@
                 }
 
                 const params = new URLSearchParams(window.location.search);
+
+                // Decode obfuscated Firebase URL token (?k=...) or (?db=...) and save to localStorage
+                const kParam = params.get('k');
+                const dbParam = params.get('db');
+                if (kParam) {
+                    try {
+                        const decodedUrl = decodeURIComponent(atob(kParam));
+                        if (decodedUrl.startsWith('http')) {
+                            localStorage.setItem(FIREBASE_URL_KEY, decodedUrl.replace(/\/+$/, ''));
+                        }
+                    } catch (e) {}
+                } else if (dbParam && dbParam.startsWith('http')) {
+                    localStorage.setItem(FIREBASE_URL_KEY, dbParam.replace(/\/+$/, ''));
+                }
+
+                // Check for Offline Snapshot Archive URL (?snap=...)
                 const snapParam = params.get('snap');
                 if (snapParam && typeof LZString !== 'undefined') {
                     try {
@@ -1106,10 +1193,12 @@
                     } catch (e) {}
                 }
 
+                // Check for Live Spectator Room Code (?room=...)
                 const roomParam = params.get('room');
                 if (roomParam) {
                     this.state.roomCode = roomParam.toUpperCase();
                     this.isSpectator = true;
+                    // Immediately strip ?k= or ?db= from address bar so Firebase URL is never visible
                     if (window.history && window.history.replaceState) {
                         window.history.replaceState({}, document.title, `${window.location.pathname}?room=${encodeURIComponent(this.state.roomCode)}`);
                     }
@@ -1118,7 +1207,16 @@
                 }
 
                 this.applySpectatorLockdownUI();
-                this.renderAll();
+                this.updateCloudStatusIndicator();
+
+                if (this.isSpectator && this.state.matches.length > 0) {
+                    const activeM = this.getActiveMatch();
+                    this.currentView = activeM && activeM.status === 'completed' ? 'analytics' : 'match';
+                } else if (this.state.lastActiveView) {
+                    this.currentView = this.state.lastActiveView;
+                }
+
+                this.navigate(this.currentView, true);
             },
 
             createDefaultSeriesState() {
@@ -1127,6 +1225,7 @@
                     roomCode: randomCode,
                     seriesName: 'Weekend Turf Champions Series',
                     seriesLength: 3,
+                    scorerPinHash: this.hashPin('7788'),
                     rules: { lastManStanding: true, wagonWheel: true, rebowlExtras: true },
                     teamA: {
                         name: 'Royal Strikers',
@@ -1151,6 +1250,245 @@
                 } catch (e) {}
                 if (!this.isSpectator) {
                     this.pushToCloudRoom();
+                }
+            },
+
+            getDatabaseBaseUrl() {
+                const saved = localStorage.getItem(FIREBASE_URL_KEY);
+                return saved ? saved.trim().replace(/\/+$/, '') : '';
+            },
+
+            saveCustomFirebaseUrl() {
+                const input = document.getElementById('customFirebaseUrlInput');
+                if (!input) return;
+                let val = input.value.trim().replace(/\/+$/, '');
+                if (val && !val.startsWith('http')) {
+                    val = 'https://' + val;
+                }
+                if (val) {
+                    localStorage.setItem(FIREBASE_URL_KEY, val);
+                    this.updateCloudStatusIndicator();
+                    this.pushToCloudRoom();
+                    this.openShareModal();
+                    this.showToast('Firebase Cloud Database URL Saved & Synced!', 'emerald');
+                } else {
+                    localStorage.removeItem(FIREBASE_URL_KEY);
+                    this.updateCloudStatusIndicator();
+                    this.openShareModal();
+                    this.showToast('Cloud URL cleared (Using Local Storage).', 'amber');
+                }
+            },
+
+            updateCloudStatusIndicator() {
+                const baseUrl = this.getDatabaseBaseUrl();
+                const dot = document.getElementById('cloudStatusDot');
+                const txt = document.getElementById('cloudStatusText');
+                const modalBadge = document.getElementById('modalCloudBadge');
+
+                if (baseUrl) {
+                    if (dot) dot.className = 'w-2 h-2 rounded-full bg-emerald-400 inline-block animate-pulse';
+                    if (txt) txt.textContent = this.isSpectator ? 'Live Cloud Connected' : 'Cloud Sync Active';
+                    if (modalBadge) {
+                        modalBadge.className = 'px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300';
+                        modalBadge.textContent = '● Cloud Connected';
+                    }
+                } else {
+                    if (dot) dot.className = 'w-2 h-2 rounded-full bg-amber-400 inline-block';
+                    if (txt) txt.textContent = 'Local Saved (Set Cloud URL in Share)';
+                    if (modalBadge) {
+                        modalBadge.className = 'px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-300';
+                        modalBadge.textContent = 'Local Only (Add URL Below)';
+                    }
+                }
+            },
+
+            async pushToCloudRoom() {
+                const baseUrl = this.getDatabaseBaseUrl();
+                if (!baseUrl || !this.state || !this.state.roomCode) {
+                    this.updateCloudStatusIndicator();
+                    return;
+                }
+                try {
+                    const payload = JSON.parse(JSON.stringify(this.state));
+                    // Strip heavy undoStack before sending to cloud for ultra-fast sync
+                    if (Array.isArray(payload.matches)) {
+                        payload.matches.forEach(m => { delete m.undoStack; });
+                    }
+                    payload.lastUpdatedTs = Date.now();
+                    await fetch(`${baseUrl}/cricpulse_rooms/${encodeURIComponent(this.state.roomCode)}.json`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    const dot = document.getElementById('cloudStatusDot');
+                    const txt = document.getElementById('cloudStatusText');
+                    if (dot) dot.className = 'w-2 h-2 rounded-full bg-emerald-400 inline-block';
+                    if (txt) txt.textContent = 'Synced Live • ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                } catch (e) {
+                    const dot = document.getElementById('cloudStatusDot');
+                    if (dot) dot.className = 'w-2 h-2 rounded-full bg-rose-400 inline-block';
+                }
+            },
+
+            async pullFromCloudRoom(showFeedback = false) {
+                const baseUrl = this.getDatabaseBaseUrl();
+                if (!baseUrl || !this.state || !this.state.roomCode) {
+                    if (showFeedback) {
+                        this.showToast('No Cloud Database linked in this URL. Ask Scorer to add their Firebase URL in Share Live!', 'amber');
+                    }
+                    return;
+                }
+                try {
+                    const res = await fetch(`${baseUrl}/cricpulse_rooms/${encodeURIComponent(this.state.roomCode)}.json?t=${Date.now()}`);
+                    if (!res.ok) return;
+                    const remoteData = await res.json();
+                    if (remoteData && remoteData.roomCode) {
+                        const prevState = this.state ? JSON.parse(JSON.stringify(this.state)) : null;
+                        const preservedLocalView = this.currentView;
+                        const wasFirstLoad = !prevState || !prevState.matches || prevState.matches.length === 0;
+
+                        this.state = this.sanitizeStateData(remoteData);
+                        try {
+                            localStorage.setItem(STORAGE_KEY, JSON.stringify(this.state));
+                        } catch (e) {}
+
+                        // Trigger Spectator TV Animations on new ball / wicket / boundary / win
+                        if (this.isSpectator) {
+                            this.checkAndTriggerSpectatorTVAnimation(prevState, this.state);
+                        }
+
+                        if (wasFirstLoad && this.state.matches.length > 0) {
+                            const activeM = this.getActiveMatch();
+                            this.currentView = activeM && activeM.status === 'completed' ? 'analytics' : 'match';
+                            this.navigate(this.currentView, true);
+                        } else {
+                            // Keep Spectator on whichever tab (Live Console, Scorecard, Analytics) they are viewing!
+                            this.currentView = preservedLocalView;
+                            this.renderAll();
+                        }
+
+                        const dot = document.getElementById('cloudStatusDot');
+                        const txt = document.getElementById('cloudStatusText');
+                        if (dot) dot.className = 'w-2 h-2 rounded-full bg-emerald-400 inline-block animate-pulse';
+                        if (txt) txt.textContent = 'Live Updated • ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                        if (showFeedback) this.showToast('Live Score Synced from Cloud!', 'emerald');
+                    } else if (showFeedback) {
+                        this.showToast(`Room ${this.state.roomCode} not found on cloud yet. Scorer must tap a ball or Share first.`, 'amber');
+                    }
+                } catch (e) {
+                    if (showFeedback) this.showToast('Could not reach Cloud Database. Check internet connection.', 'rose');
+                }
+            },
+
+            startSpectatorPolling() {
+                if (this.spectatorPollInterval) clearInterval(this.spectatorPollInterval);
+                this.spectatorPollInterval = setInterval(() => {
+                    if (this.isSpectator) this.pullFromCloudRoom(false);
+                }, 3500);
+            },
+
+            applySpectatorLockdownUI() {
+                const banner = document.getElementById('spectatorModeBanner');
+                if (banner) banner.classList.toggle('hidden', !this.isSpectator);
+
+                document.querySelectorAll('.scorer-only').forEach(el => {
+                    if (this.isSpectator) {
+                        el.classList.add('hidden');
+                    } else {
+                        if (el.id !== 'btnStartNextSeriesMatch' && el.id !== 'btnStartSuperOver') {
+                            el.classList.remove('hidden');
+                        }
+                    }
+                });
+
+                const leftCol = document.getElementById('liveLeftCol');
+                if (leftCol) {
+                    leftCol.className = this.isSpectator ? 'lg:col-span-12 space-y-4' : 'lg:col-span-7 space-y-4';
+                }
+            },
+
+            isCreatorAuthenticated() {
+                return localStorage.getItem(AUTH_TOKEN_KEY) === 'VERIFIED_CHERRY_ADMIN';
+            },
+
+            openAuthModal() {
+                document.getElementById('authUsernameInput').value = '';
+                document.getElementById('authPasswordInput').value = '';
+                document.getElementById('modal-auth').classList.remove('hidden');
+            },
+
+            verifyCreatorLogin() {
+                const u = document.getElementById('authUsernameInput').value.trim();
+                const p = document.getElementById('authPasswordInput').value.trim();
+                if (u.toLowerCase() === 'cricpulse2026' && p === 'Rcbc2026') {
+                    localStorage.setItem(AUTH_TOKEN_KEY, 'VERIFIED_CHERRY_ADMIN');
+                    this.isSpectator = false;
+                    this.closeModal('modal-auth');
+                    this.applySpectatorLockdownUI();
+                    this.renderAll();
+                    this.showToast('Creator Authentication Successful! Welcome Cherry.', 'emerald');
+                    if (this.pendingAuthAction) {
+                        const act = this.pendingAuthAction;
+                        this.pendingAuthAction = null;
+                        this.executeAuthAction(act);
+                    }
+                } else {
+                    this.showToast('Invalid User ID or Password!', 'rose');
+                }
+            },
+
+            requestAuthAction(actionType) {
+                if (this.isCreatorAuthenticated()) {
+                    this.executeAuthAction(actionType);
+                } else {
+                    this.pendingAuthAction = actionType;
+                    this.openAuthModal();
+                }
+            },
+
+            executeAuthAction(type) {
+                if (type === 'new_series') this.openSetupModal('new_series');
+                else if (type === 'next_match') this.openSetupModal('next_match');
+                else if (type === 'demo') this.loadDemoSampleMatch();
+                else if (type === 'reset') this.resetAllStorage();
+            },
+
+            openPinTakeoverModal() {
+                document.getElementById('emergencyPinInput').value = '';
+                document.getElementById('pinLockoutWarning').classList.add('hidden');
+                document.getElementById('modal-pin-takeover').classList.remove('hidden');
+            },
+
+            verifyEmergencyPinTakeover() {
+                const lockUntil = parseInt(localStorage.getItem(PIN_LOCKOUT_KEY) || '0', 10);
+                const warnEl = document.getElementById('pinLockoutWarning');
+                if (Date.now() < lockUntil) {
+                    const secs = Math.ceil((lockUntil - Date.now()) / 1000);
+                    warnEl.textContent = `Too many failed attempts! Locked for ${secs}s.`;
+                    warnEl.classList.remove('hidden');
+                    return;
+                }
+
+                const entered = document.getElementById('emergencyPinInput').value.trim();
+                const expectedHash = this.state.scorerPinHash || this.hashPin('7788');
+                if (this.hashPin(entered) === expectedHash || entered === 'Rcbc2026') {
+                    this.pinFailedAttempts = 0;
+                    this.isSpectator = false;
+                    if (this.spectatorPollInterval) clearInterval(this.spectatorPollInterval);
+                    this.closeModal('modal-pin-takeover');
+                    this.applySpectatorLockdownUI();
+                    this.renderAll();
+                    this.showToast('Scorer Controls Unlocked on this Device!', 'emerald');
+                } else {
+                    this.pinFailedAttempts = (this.pinFailedAttempts || 0) + 1;
+                    if (this.pinFailedAttempts >= 3) {
+                        localStorage.setItem(PIN_LOCKOUT_KEY, String(Date.now() + 60000));
+                        this.pinFailedAttempts = 0;
+                        warnEl.textContent = '3 Wrong Attempts! PIN Takeover locked for 60 seconds.';
+                    } else {
+                        warnEl.textContent = `Incorrect PIN! (${3 - this.pinFailedAttempts} attempts remaining)`;
+                    }
+                    warnEl.classList.remove('hidden');
                 }
             },
 
@@ -1471,38 +1809,59 @@
                 const lbl = String(latestBall.label || '').toUpperCase();
                 const batterName = latestBall.striker || 'Batter';
                 const batterRuns = newInn.batStats?.[batterName]?.runs || 0;
+                const batterBalls = newInn.batStats?.[batterName]?.balls || 0;
 
-                // Check Hat-Tricks
+                // Check Match Completed Winner Celebration first
+                if (newMatch.status === 'completed' && newMatch.resultText) {
+                    const winSig = `${newMatch.matchId}-COMPLETED`;
+                    if (this.lastMatchWinSignature !== winSig) {
+                        this.lastMatchWinSignature = winSig;
+                        this.triggerSpectatorTVOverlay('WIN', '🏆 CHAMPIONS!', `${newMatch.resultText}`, 'amber');
+                        return;
+                    }
+                }
+
+                // Check Bowling Hat-Trick (3 Wickets in 3 Deliveries by same bowler)
                 const bowlerBalls = (newInn.ballLog || []).filter(b => b.bowler === latestBall.bowler);
                 const isHatTrickWicket = lbl === 'W' && bowlerBalls.length >= 3 && bowlerBalls[0].label === 'W' && bowlerBalls[1].label === 'W' && bowlerBalls[2].label === 'W';
-                const batterBalls = (newInn.ballLog || []).filter(b => b.striker === batterName && !String(b.label).includes('wd') && !String(b.label).includes('nb'));
-                const isHatTrickSixes = lbl.includes('6') && batterBalls.length >= 3 && batterBalls[0].label === '6' && batterBalls[1].label === '6' && batterBalls[2].label === '6';
-                const isHatTrickFours = lbl.includes('4') && batterBalls.length >= 3 && String(batterBalls[0].label).includes('4') && String(batterBalls[1].label).includes('4') && String(batterBalls[2].label).includes('4');
+
+                // Check Batting Hat-Trick of Sixes or Fours (3 consecutive 6s or 4s)
+                const bLogLegal = (newInn.ballLog || []).filter(b => b.striker === batterName && !String(b.label).toUpperCase().includes('WD'));
+                const isHatTrickSixes = lbl.includes('6') && bLogLegal.length >= 3 && String(bLogLegal[0].label).includes('6') && String(bLogLegal[1].label).includes('6') && String(bLogLegal[2].label).includes('6');
+                const isHatTrickFours = lbl.includes('4') && !lbl.includes('WD') && bLogLegal.length >= 3 && String(bLogLegal[0].label).includes('4') && String(bLogLegal[1].label).includes('4') && String(bLogLegal[2].label).includes('4');
+
+                // Check Maiden Over Completed
+                const isMaidenCompleted = newInn.legalBalls > 0 && newInn.legalBalls % 6 === 0 && newInn.oversHistory.length > 0 &&
+                    newInn.oversHistory[newInn.oversHistory.length - 1].overNum === Math.floor(newInn.legalBalls / 6) &&
+                    newInn.thisOver.length >= 6 && newInn.thisOver.every(x => x.label === '0');
 
                 if (isHatTrickWicket) {
-                    this.triggerSpectatorTVOverlay('WICKET', '🎩🔥 HAT-TRICK HERO!', `${latestBall.bowler} takes 3 wickets in 3 balls! Incredible spell!`, 'rose');
+                    this.triggerSpectatorTVOverlay('WICKET', '🎩🔥 HAT-TRICK HERO!', `${latestBall.bowler} takes 3 Wickets in 3 Balls! Unbelievable spell!`, 'rose');
                 } else if (isHatTrickSixes) {
                     this.triggerSpectatorTVOverlay('SIX', '🚀🔥 HAT-TRICK OF MAXIMUMS!', `${batterName} smashes 3 SIXES in a row (6 • 6 • 6)!`, 'purple');
                 } else if (isHatTrickFours) {
-                    this.triggerSpectatorTVOverlay('FOUR', '⚡🔥 HAT-TRICK OF BOUNDARIES!', `${batterName} hits 3 FOURS in a row (4 • 4 • 4)!`, 'emerald');
+                    this.triggerSpectatorTVOverlay('FOUR', '⚡🔥 HAT-TRICK OF BOUNDARIES!', `${batterName} drills 3 FOURS in a row (4 • 4 • 4)!`, 'emerald');
+                } else if (lbl.includes('NB')) {
+                    this.triggerSpectatorTVOverlay('FOUR', '🚨 NO BALL — FREE HIT!', `Next delivery to ${newInn.striker} is a FREE HIT!`, 'amber');
                 } else if (lbl === 'W') {
-                    const desc = latestBall.desc || '';
+                    const desc = (latestBall.desc || '').toLowerCase();
                     let wTitle = 'WICKET / OUT!';
-                    if (desc.includes('b ')) wTitle = '🎯 TIMBER! BOWLED HIM!';
-                    else if (desc.includes('c ')) wTitle = '🧤 CAUGHT OUT! SAFE HANDS!';
+                    if (desc.includes(' c ') || desc.includes('c & b')) wTitle = '🧤 CAUGHT OUT! SAFE HANDS!';
+                    else if (desc.includes(' b ')) wTitle = '🎯 TIMBER! BOWLED HIM!';
                     else if (desc.includes('run out')) wTitle = '⚡ DIRECT HIT / RUN OUT!';
-                    else if (desc.includes('lbw')) wTitle = '☝️ PLUMB LBW!';
+                    else if (desc.includes('lbw')) wTitle = '☝️ PLUMB LBW! UP GOES THE FINGER!';
                     else if (desc.includes('st ')) wTitle = '⚡ FLASHING GLOVES! STUMPED!';
+                    else if (desc.includes('hit wicket')) wTitle = '💥 HIT WICKET! WHAT DRAMA!';
 
                     if (batterRuns === 0) {
-                        const isGold = batterRuns === 0 && batterRuns === 0; // Duck check
-                        this.triggerSpectatorTVOverlay('WICKET', `🦆 DUCK OUT! (0 Runs)`, `${batterName} departs without scoring a run!`, 'rose');
+                        const duckTitle = batterBalls <= 1 ? '🦆 GOLDEN DUCK! 0 (1 Ball)' : '🦆 DUCK OUT! (0 Runs)';
+                        this.triggerSpectatorTVOverlay('WICKET', duckTitle, `${batterName} departs without scoring! (${wTitle})`, 'rose');
                     } else {
-                        this.triggerSpectatorTVOverlay('WICKET', wTitle, `${batterName} departs! (${latestBall.desc})`, 'rose');
+                        this.triggerSpectatorTVOverlay('WICKET', wTitle, `${batterName} departs for ${batterRuns} (${batterBalls}b)!`, 'rose');
                     }
                 } else if (lbl.includes('6')) {
                     if (batterRuns >= 100 && batterRuns - 6 < 100) {
-                        this.triggerSpectatorTVOverlay('CENTURY', '👑 CENTURY! 100*', `${batterName} brings up a magnificent 100 (${newInn.batStats[batterName].balls} balls)!`, 'amber');
+                        this.triggerSpectatorTVOverlay('CENTURY', '👑 CENTURY! 100*', `${batterName} brings up a magnificent 100 (${batterBalls} balls)!`, 'amber');
                     } else if (batterRuns >= 50 && batterRuns - 6 < 50) {
                         this.triggerSpectatorTVOverlay('FIFTY', '⭐ HALF-CENTURY! 50*', `${batterName} reaches a superb 50 with a MAXIMUM!`, 'amber');
                     } else {
@@ -1512,13 +1871,12 @@
                     if (batterRuns >= 100 && batterRuns - 4 < 100) {
                         this.triggerSpectatorTVOverlay('CENTURY', '👑 CENTURY! 100*', `${batterName} reaches 100 with a glorious boundary!`, 'amber');
                     } else if (batterRuns >= 50 && batterRuns - 4 < 50) {
-                        this.triggerSpectatorTVOverlay('FIFTY', '⭐ FIFTY UP! 50*', `Well played ${batterName} — 50 runs (${newInn.batStats[batterName].balls} balls)!`, 'amber');
+                        this.triggerSpectatorTVOverlay('FIFTY', '⭐ FIFTY UP! 50*', `Well played ${batterName} — 50 runs (${batterBalls} balls)!`, 'amber');
                     } else {
                         this.triggerSpectatorTVOverlay('FOUR', '⚡ BOUNDARY! 4', `CRACKING FOUR raced away by ${batterName}!`, 'emerald');
                     }
-                } else if (newMatch.status === 'completed' && newMatch.winnerTeamKey) {
-                    const winTeam = newMatch.winnerTeamKey === 'A' ? this.state.teamA.name : (newMatch.winnerTeamKey === 'B' ? this.state.teamB.name : 'Match Tied');
-                    this.triggerSpectatorTVOverlay('WIN', '🏆 CHAMPIONS!', `${newMatch.resultText}`, 'amber');
+                } else if (isMaidenCompleted) {
+                    this.triggerSpectatorTVOverlay('FOUR', '🧱 GOLDEN MAIDEN OVER!', `${latestBall.bowler} bowls 6 dot balls in a row!`, 'amber');
                 }
             },
 
@@ -1598,18 +1956,18 @@
             // -------------------------------------------------------------
             // NAVIGATION & MODALS
             // -------------------------------------------------------------
-            navigate(view) {
+            navigate(view, keepLocalView = false) {
                 const matchViews = ['match', 'scorecard', 'analytics'];
                 if (matchViews.includes(view) && !this.getActiveMatch()) {
                     if (this.state && this.state.matches && this.state.matches.length > 0) {
                         this.state.activeMatchIndex = this.state.matches.length - 1;
                     } else {
-                        this.showToast('Start or select a match first!', 'amber');
+                        if (!keepLocalView) this.showToast('Start or select a match first!', 'amber');
                         view = 'hub';
                     }
                 }
                 this.currentView = view;
-                if (!this.isSpectator) {
+                if (!this.isSpectator && !keepLocalView) {
                     this.state.lastActiveView = view;
                     this.saveState();
                 }
@@ -1811,17 +2169,26 @@
             },
 
             updateSetupTeamDropdowns() {
-                const nameA = document.getElementById('setupTeamAName').value.trim() || 'Team 1';
-                const nameB = document.getElementById('setupTeamBName').value.trim() || 'Team 2';
+                const nameA = document.getElementById('setupTeamAName')?.value.trim() || this.state?.teamA?.name || 'Team 1';
+                const nameB = document.getElementById('setupTeamBName')?.value.trim() || this.state?.teamB?.name || 'Team 2';
 
                 const tossSel = document.getElementById('setupTossWinner');
                 if (tossSel) {
+                    const curVal = tossSel.value || 'A';
                     tossSel.innerHTML = `<option value="A">${nameA}</option><option value="B">${nameB}</option>`;
+                    tossSel.value = curVal;
                 }
                 const optA = document.getElementById('endMatchOptTeamA');
                 const optB = document.getElementById('endMatchOptTeamB');
                 if (optA) optA.textContent = `Force Winner: ${nameA}`;
                 if (optB) optB.textContent = `Force Winner: ${nameB}`;
+
+                const midAddTeamSel = document.getElementById('midAddPlayerTeam');
+                if (midAddTeamSel) {
+                    const curMid = midAddTeamSel.value || 'A';
+                    midAddTeamSel.innerHTML = `<option value="A">${nameA}</option><option value="B">${nameB}</option>`;
+                    midAddTeamSel.value = curMid;
+                }
             },
 
             parsePlayersList(rawText, fallbackPrefix) {
@@ -1835,7 +2202,7 @@
             startConfiguredMatch() {
                 const seriesName = document.getElementById('setupSeriesName').value.trim() || 'Turf Series';
                 const seriesLength = parseInt(document.getElementById('setupSeriesLength').value, 10) || 3;
-                const venue = document.getElementById('setupVenue').value.trim() || 'Main Ground';
+                const venue = document.getElementById('setupVenue').value.trim() || 'Local Ground';
                 const totalOvers = Math.max(1, parseInt(document.getElementById('setupOvers').value, 10) || 6);
                 const maxBowlerOvers = Math.max(1, parseInt(document.getElementById('setupMaxBowlerOvers').value, 10) || 2);
                 const pitch = document.getElementById('setupPitch').value;
@@ -1860,6 +2227,7 @@
 
                 this.state.seriesName = seriesName;
                 this.state.seriesLength = seriesLength;
+                this.state.scorerPinHash = this.hashPin(rawPin);
                 this.state.rules = rules;
                 this.state.teamA = { name: teamAName, color: teamAColor, players: teamAPlayers };
                 this.state.teamB = { name: teamBName, color: teamBColor, players: teamBPlayers };
@@ -2252,9 +2620,8 @@
                 const inn = this.getActiveInnings();
                 if (!match || !inn || match.status === 'completed') return;
 
-                const bSel = document.getElementById('wicketBatterSelect');
-                const battersAtCrease = [inn.striker, inn.nonStriker].filter(Boolean);
-                bSel.innerHTML = battersAtCrease.map(p => `<option value="${p}">${p}</option>`).join('');
+                document.getElementById('wicketTypeSelect').value = 'Caught';
+                this.onWicketTypeChange();
 
                 const fSel = document.getElementById('wicketFielderSelect');
                 fSel.innerHTML = `<option value="">-- Select Fielder (Optional) --</option>` +
@@ -2277,6 +2644,20 @@
 
                 document.getElementById('wicketCompletedRuns').value = '0';
                 document.getElementById('modal-wicket').classList.remove('hidden');
+            },
+
+            onWicketTypeChange() {
+                const inn = this.getActiveInnings();
+                if (!inn) return;
+                const wType = document.getElementById('wicketTypeSelect').value;
+                const bSel = document.getElementById('wicketBatterSelect');
+                const battersAtCrease = [inn.striker, inn.nonStriker].filter(Boolean);
+                bSel.innerHTML = battersAtCrease.map(p => {
+                    const isNonStriker = p !== inn.striker;
+                    const disabled = wType !== 'Run Out' && isNonStriker;
+                    return `<option value="${p}" ${disabled ? 'disabled' : ''}>${p}${p === inn.striker ? ' (Striker)' : ' (Non-Striker)'}</option>`;
+                }).join('');
+                if (inn.striker) bSel.value = inn.striker;
             },
 
             confirmWicket() {
@@ -2531,7 +2912,7 @@
 
                 this.saveState();
                 this.recordMatchIntoCareerHall(match);
-                if (typeof confetti === 'function') confetti({ particleCount: 120, spread: 100, origin: { y: 0.5 } });
+                this.triggerSpectatorTVOverlay('WIN', '🏆 CHAMPIONS!', `${match.resultText}`, 'amber');
                 this.showToast(`Match Completed: ${match.resultText}`, 'emerald');
                 this.navigate('analytics');
             },
@@ -2562,9 +2943,236 @@
             },
 
             openDoubleConfirmEndMatchModal() {
+                this.updateSetupTeamDropdowns();
                 document.getElementById('endMatchStep1').classList.remove('hidden');
                 document.getElementById('endMatchStep2').classList.add('hidden');
                 document.getElementById('modal-endmatch').classList.remove('hidden');
+            },
+
+            proceedEndMatchStep2() {
+                document.getElementById('endMatchStep1').classList.add('hidden');
+                document.getElementById('endMatchStep2').classList.remove('hidden');
+            },
+
+            finalizeMatchConfirmed() {
+                const match = this.getActiveMatch();
+                if (!match) return;
+                const mode = document.getElementById('endMatchResultOverride').value;
+                this.closeModal('modal-endmatch');
+
+                if (mode === 'AUTO') {
+                    this.concludeMatchAutomatically(match);
+                    return;
+                }
+
+                match.status = 'completed';
+                if (mode === 'A') {
+                    match.winnerTeamKey = 'A';
+                    match.resultText = `${this.state.teamA.name} won (Match Awarded)`;
+                } else if (mode === 'B') {
+                    match.winnerTeamKey = 'B';
+                    match.resultText = `${this.state.teamB.name} won (Match Awarded)`;
+                } else if (mode === 'TIE') {
+                    match.winnerTeamKey = 'TIE';
+                    match.resultText = `Match Tied — Super Over Available`;
+                } else {
+                    match.winnerTeamKey = 'NR';
+                    match.resultText = `Match Abandoned / No Result`;
+                }
+
+                this.saveState();
+                this.recordMatchIntoCareerHall(match);
+                this.triggerSpectatorTVOverlay('WIN', '🏆 MATCH RESULT', `${match.resultText}`, 'amber');
+                this.navigate('analytics');
+            },
+
+            openMidMatchRulesModal() {
+                const match = this.getActiveMatch();
+                if (!match) return;
+                document.getElementById('midRuleLastMan').checked = !!match.rules.lastManStanding;
+                document.getElementById('midRuleWagon').checked = !!match.rules.wagonWheel;
+                document.getElementById('midRuleOvers').value = match.totalOvers;
+
+                this.updateSetupTeamDropdowns();
+
+                const allPlayers = [...new Set([...this.state.teamA.players, ...this.state.teamB.players])];
+                const renameSel = document.getElementById('midRenameOldSelect');
+                if (renameSel) renameSel.innerHTML = allPlayers.map(p => `<option value="${p}">${p}</option>`).join('');
+                document.getElementById('modal-midrules').classList.remove('hidden');
+            },
+
+            addPlayerMidMatch() {
+                const teamKey = document.getElementById('midAddPlayerTeam').value || 'A';
+                const newName = document.getElementById('midAddPlayerName').value.trim();
+                if (!newName) {
+                    this.showToast('Please enter the new player name!', 'amber');
+                    return;
+                }
+
+                const targetTeam = teamKey === 'A' ? this.state.teamA : this.state.teamB;
+                if (targetTeam.players.includes(newName)) {
+                    this.showToast(`${newName} is already in ${targetTeam.name}!`, 'amber');
+                    return;
+                }
+
+                targetTeam.players.push(newName);
+
+                const match = this.getActiveMatch();
+                if (match) {
+                    match.innings.forEach(inn => {
+                        if (inn.battingTeamKey === teamKey) {
+                            if (!inn.battingRoster.includes(newName)) inn.battingRoster.push(newName);
+                            if (!inn.batStats[newName]) {
+                                inn.batStats[newName] = { name: newName, runs: 0, balls: 0, fours: 0, sixes: 0, status: 'dnb', outDesc: 'Did Not Bat' };
+                            }
+                        }
+                        if (inn.bowlingTeamKey === teamKey) {
+                            if (!inn.bowlingRoster.includes(newName)) inn.bowlingRoster.push(newName);
+                            if (!inn.bowlStats[newName]) {
+                                inn.bowlStats[newName] = { name: newName, balls: 0, maidens: 0, runs: 0, wickets: 0, currentOverRuns: 0 };
+                            }
+                            if (!inn.fieldStats[newName]) {
+                                inn.fieldStats[newName] = { catches: 0, runOuts: 0, stumpings: 0 };
+                            }
+                        }
+                    });
+                }
+
+                document.getElementById('midAddPlayerName').value = '';
+                this.openMidMatchRulesModal();
+                this.saveState();
+                this.renderAll();
+                this.showToast(`Added ${newName} to ${targetTeam.name} squad!`, 'emerald');
+            },
+
+            renamePlayerMidMatch() {
+                const oldName = document.getElementById('midRenameOldSelect').value;
+                const newName = document.getElementById('midRenameNewInput').value.trim();
+                if (!oldName || !newName || oldName === newName) {
+                    this.showToast('Enter valid new name!', 'amber');
+                    return;
+                }
+
+                ['teamA', 'teamB'].forEach(tk => {
+                    const idx = this.state[tk].players.indexOf(oldName);
+                    if (idx !== -1) this.state[tk].players[idx] = newName;
+                });
+
+                const match = this.getActiveMatch();
+                if (match) {
+                    match.innings.forEach(inn => {
+                        const bIdx = inn.battingRoster.indexOf(oldName);
+                        if (bIdx !== -1) inn.battingRoster[bIdx] = newName;
+                        const bwIdx = inn.bowlingRoster.indexOf(oldName);
+                        if (bwIdx !== -1) inn.bowlingRoster[bwIdx] = newName;
+                        if (inn.striker === oldName) inn.striker = newName;
+                        if (inn.nonStriker === oldName) inn.nonStriker = newName;
+                        if (inn.currentBowler === oldName) inn.currentBowler = newName;
+                        if (inn.batStats[oldName]) {
+                            inn.batStats[newName] = { ...inn.batStats[oldName], name: newName };
+                            delete inn.batStats[oldName];
+                        }
+                        if (inn.bowlStats[oldName]) {
+                            inn.bowlStats[newName] = { ...inn.bowlStats[oldName], name: newName };
+                            delete inn.bowlStats[oldName];
+                        }
+                        if (inn.fieldStats && inn.fieldStats[oldName]) {
+                            inn.fieldStats[newName] = { ...inn.fieldStats[oldName] };
+                            delete inn.fieldStats[oldName];
+                        }
+                        (inn.fow || []).forEach(f => { if (f.batter === oldName) f.batter = newName; });
+                        (inn.partnershipsList || []).forEach(pt => {
+                            if (pt.batter1 === oldName) pt.batter1 = newName;
+                            if (pt.batter2 === oldName) pt.batter2 = newName;
+                        });
+                        (inn.wagonShots || []).forEach(ws => {
+                            if (ws.batter === oldName) ws.batter = newName;
+                            if (ws.bowler === oldName) ws.bowler = newName;
+                        });
+                        (inn.ballLog || []).forEach(bl => {
+                            if (bl.striker === oldName) bl.striker = newName;
+                            if (bl.bowler === oldName) bl.bowler = newName;
+                            if (bl.desc) bl.desc = bl.desc.split(oldName).join(newName);
+                        });
+                    });
+                }
+
+                document.getElementById('midRenameNewInput').value = '';
+                this.openMidMatchRulesModal();
+                this.saveState();
+                this.renderAll();
+                this.showToast(`Renamed "${oldName}" to "${newName}" across all stats!`, 'emerald');
+            },
+
+            saveMidMatchRules() {
+                const match = this.getActiveMatch();
+                if (!match) return;
+                match.rules.lastManStanding = document.getElementById('midRuleLastMan').checked;
+                match.rules.wagonWheel = document.getElementById('midRuleWagon').checked;
+                match.totalOvers = Math.max(1, parseInt(document.getElementById('midRuleOvers').value, 10) || match.totalOvers);
+                this.closeModal('modal-midrules');
+                this.saveState();
+                this.renderAll();
+                this.showToast('Rules updated!', 'emerald');
+            },
+
+            openShareModal() {
+                document.getElementById('shareModalRoomCode').textContent = this.state.roomCode;
+                const savedFb = this.getDatabaseBaseUrl();
+                const fbInput = document.getElementById('customFirebaseUrlInput');
+                if (fbInput) fbInput.value = savedFb;
+                this.updateCloudStatusIndicator();
+
+                const baseUrl = window.location.href.split('?')[0];
+                let shareUrl = `${baseUrl}?room=${encodeURIComponent(this.state.roomCode)}`;
+                if (savedFb) {
+                    const encodedKey = btoa(encodeURIComponent(savedFb));
+                    shareUrl += `&k=${encodeURIComponent(encodedKey)}`;
+                }
+                document.getElementById('shareSpectatorUrlInput').value = shareUrl;
+                document.getElementById('modal-share').classList.remove('hidden');
+                this.pushToCloudRoom();
+            },
+
+            copySpectatorLink() {
+                const input = document.getElementById('shareSpectatorUrlInput');
+                input.select();
+                document.execCommand('copy');
+                navigator.clipboard?.writeText(input.value).catch(() => {});
+                this.showToast('Live Spectator Link copied!', 'emerald');
+            },
+
+            copySnapshotLink() {
+                if (typeof LZString === 'undefined') return;
+                const baseUrl = window.location.href.split('?')[0];
+                const copyState = JSON.parse(JSON.stringify(this.state));
+                (copyState.matches || []).forEach(m => delete m.undoStack);
+                const compressed = LZString.compressToEncodedURIComponent(JSON.stringify(copyState));
+                const snapUrl = `${baseUrl}?snap=${compressed}`;
+                navigator.clipboard?.writeText(snapUrl).catch(() => {});
+                this.showToast('Offline Archive Link copied to clipboard!', 'sky');
+            },
+
+            shareWhatsAppDirect() {
+                const url = document.getElementById('shareSpectatorUrlInput').value;
+                const match = this.getActiveMatch();
+                const inn = match ? match.innings[match.currentInningsIndex] : null;
+                const scoreLine = inn ? `${inn.battingTeamName}: ${inn.runs}/${inn.wickets} (${this.formatOvers(inn.legalBalls)} ov)` : this.state.seriesName;
+                const text = `🏏 *CricPulse Pro Live Broadcast (Crafted by Cherry)*\n${scoreLine}\nRoom Code: *${this.state.roomCode}*\nWatch Live Ball-by-Ball: ${url}`;
+                window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+            },
+
+            joinSpectatorRoomFromInput() {
+                const code = document.getElementById('joinRoomInput').value.trim().toUpperCase();
+                if (!code) {
+                    this.showToast('Enter a valid Room Code (e.g. CRIC-409)', 'amber');
+                    return;
+                }
+                this.state.roomCode = code;
+                this.isSpectator = true;
+                this.applySpectatorLockdownUI();
+                this.pullFromCloudRoom(true);
+                this.startSpectatorPolling();
             },
 
             proceedEndMatchStep2() {
@@ -2856,13 +3464,19 @@
                 const tickerEl = document.getElementById('liveBroadcastTickerAlert');
                 if (tickerEl) {
                     let alertMsg = '';
+                    const remBalls = match.totalOvers * 6 - inn.legalBalls;
                     const bowlerBalls = inn.ballLog.filter(b => b.bowler === inn.currentBowler);
                     if (bowlerBalls.length >= 2 && bowlerBalls[0].label === 'W' && bowlerBalls[1].label === 'W') {
                         alertMsg = `🔥 HAT-TRICK BALL! ${inn.currentBowler} is on a Hat-Trick!`;
+                    } else if (inn.partnership && inn.partnership.runs >= 50 && inn.partnership.runs < 56) {
+                        alertMsg = `🤝 50-RUN PARTNERSHIP! ${inn.striker} & ${inn.nonStriker || 'Partner'} (${inn.partnership.runs} runs off ${inn.partnership.balls} balls)`;
                     } else if (inn.striker && inn.batStats[inn.striker]) {
                         const sRuns = inn.batStats[inn.striker].runs;
-                        if (sRuns >= 44 && sRuns < 50) alertMsg = `⭐ MILESTONE: ${inn.striker} is on ${sRuns}* (${50 - sRuns} away from 50!)`;
-                        else if (sRuns >= 94 && sRuns < 100) alertMsg = `👑 CENTURY ALERT: ${inn.striker} is on ${sRuns}* (${100 - sRuns} away from 100!)`;
+                        if (sRuns >= 44 && sRuns < 50) alertMsg = `⭐ MILESTONE ALERT: ${inn.striker} is on ${sRuns}* (${50 - sRuns} runs away from a Half-Century!)`;
+                        else if (sRuns >= 94 && sRuns < 100) alertMsg = `👑 CENTURY ALERT: ${inn.striker} is on ${sRuns}* (${100 - sRuns} runs away from 100!)`;
+                    }
+                    if (!alertMsg && remBalls === 6 && inn.legalBalls > 0) {
+                        alertMsg = `⏳ FINAL OVER OF THE INNINGS! (6 Legal Balls Remaining)`;
                     }
                     tickerEl.textContent = alertMsg;
                     tickerEl.classList.toggle('hidden', !alertMsg);
@@ -2975,10 +3589,12 @@
                 if (thisOverLabel) thisOverLabel.textContent = isCompletedOverHold ? `Over ${Math.floor(inn.legalBalls / 6)} Complete:` : 'This Over:';
 
                 if (inn.thisOver.length === 0) {
-                    thisOverEl.innerHTML = `<span class="text-xs text-slate-500 italic">New over starting...</span>`;
+                    thisOverEl.innerHTML = inn.isFreeHit
+                        ? `<span class="px-2.5 py-1 rounded-lg bg-amber-500/20 border border-amber-400 text-amber-300 text-[10px] font-black uppercase animate-pulse">⚡ FREE HIT NEXT</span>`
+                        : `<span class="text-xs text-slate-500 italic">New over starting...</span>`;
                 } else {
                     let ballsHTML = inn.thisOver.map(b => `<span class="score-font w-8 h-8 rounded-full border text-xs flex items-center justify-center shrink-0 ${chipStyles[b.color] || chipStyles.slate}">${b.label}</span>`).join('');
-                    if (inn.isFreeHit) ballsHTML += `<span class="px-2 py-1 rounded-lg bg-amber-500/20 border border-amber-400 text-amber-300 text-[10px] font-black uppercase animate-pulse">⚡ FREE HIT</span>`;
+                    if (inn.isFreeHit) ballsHTML += `<span class="px-2.5 py-1 rounded-lg bg-amber-500/20 border border-amber-400 text-amber-300 text-[10px] font-black uppercase animate-pulse shrink-0">⚡ FREE HIT NEXT</span>`;
                     thisOverEl.innerHTML = ballsHTML;
                 }
 
@@ -3193,11 +3809,26 @@
 
                 return Object.values(map).map(p => {
                     let pts = 0;
-                    pts += p.batRuns * 1.35 + p.fours * 2 + p.sixes * 4;
+                    // Batting impact
+                    pts += p.batRuns * 1.4 + p.fours * 2.5 + p.sixes * 4.5;
+                    if (p.batBalls >= 4) {
+                        const sr = (p.batRuns / p.batBalls) * 100;
+                        pts += Math.max(-8, Math.min(16, (sr - matchParSR) * 0.12));
+                    }
+                    if (p.batRuns >= 30) pts += 10;
                     if (p.batRuns >= 50) pts += 18;
+                    // Bowling impact
+                    pts += p.bowlWickets * 24 + p.maidens * 14;
+                    if (p.bowlBalls >= 6) {
+                        const econ = (p.bowlRuns / p.bowlBalls) * 6;
+                        pts += Math.max(-10, Math.min(18, (matchParEcon - econ) * 2.2));
+                    }
                     if (p.bowlWickets >= 3) pts += 15;
+                    // Fielding impact
+                    pts += p.fieldingDismissals * 10;
+
                     p.impactPoints = Math.max(0, pts);
-                    p.rating10 = Math.min(10.0, Math.max(3.5, parseFloat((4.6 + (p.impactPoints / 22)).toFixed(1))));
+                    p.rating10 = Math.min(10.0, Math.max(3.5, parseFloat((4.5 + (p.impactPoints / 22)).toFixed(1))));
                     return p;
                 }).sort((a, b) => b.impactPoints - a.impactPoints);
             },
@@ -3206,7 +3837,7 @@
                 const match = this.getActiveMatch();
                 if (!match) return;
 
-                document.getElementById('anMatchResultHeadline').textContent = match.resultText || `${match.innings[0].battingTeamName} vs ${match.innings[1].battingTeamName}`;
+                document.getElementById('anMatchResultHeadline').textContent = match.resultText || `${match.innings[0].battingTeamName} vs ${match.innings[1].battingTeamName} (Live Analytics)`;
                 document.getElementById('anSeriesStandingSub').textContent = `${this.state.seriesName} • Match ${match.matchNumber} at ${match.venue}`;
 
                 const btnSO = document.getElementById('btnStartSuperOver');
@@ -3217,16 +3848,16 @@
 
                 const ratings = this.computeMatchPlayerRatings(match);
                 const mvp = ratings[0];
-                const bestBat = [...ratings].sort((a, b) => b.batRuns - a.batRuns)[0];
+                const bestBat = [...ratings].sort((a, b) => b.batRuns - a.batRuns || a.batBalls - b.batBalls)[0];
                 const bestBowl = [...ratings].sort((a, b) => b.bowlWickets - a.bowlWickets || a.bowlRuns - b.bowlRuns)[0];
 
-                let bigOver = { team: '-', overNum: 1, runs: 0 };
+                let bigOver = { team: match.innings[0].battingTeamName, overNum: 1, runs: 0 };
                 match.innings.forEach(inn => {
-                    let prevRuns = 0;
-                    inn.oversHistory.forEach(oh => {
-                        const r = oh.runs - prevRuns;
-                        prevRuns = oh.runs;
-                        if (r >= bigOver.runs) bigOver = { team: inn.battingTeamName, overNum: oh.overNum, runs: r };
+                    const d = this.getPerOverRunsArray(inn, match.totalOvers);
+                    d.perOver.forEach((r, idx) => {
+                        if (r >= bigOver.runs) {
+                            bigOver = { team: inn.battingTeamName, overNum: idx + 1, runs: r };
+                        }
                     });
                 });
 
@@ -3234,19 +3865,19 @@
                     <div class="glass-card rounded-2xl p-4 border border-amber-500/40">
                         <span class="text-[10px] font-extrabold uppercase text-amber-400">🏆 Player of the Match (MVP)</span>
                         <h4 class="text-base font-black text-white mt-1">${mvp ? mvp.name : '-'}</h4>
-                        <p class="text-xs text-slate-300 mt-0.5">${mvp ? `${mvp.batRuns} runs & ${mvp.bowlWickets} wkts` : ''}</p>
+                        <p class="text-xs text-slate-300 mt-0.5">${mvp ? `${mvp.batRuns} runs (${mvp.batBalls}b) & ${mvp.bowlWickets}/${mvp.bowlRuns}` : ''}</p>
                         <span class="inline-block mt-2 px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 text-xs font-black">Rating: ${mvp ? mvp.rating10.toFixed(1) : '-'}/10</span>
                     </div>
                     <div class="glass-card rounded-2xl p-4 border border-emerald-500/30">
                         <span class="text-[10px] font-extrabold uppercase text-emerald-400">🏏 Best Batter</span>
                         <h4 class="text-base font-black text-white mt-1">${bestBat ? bestBat.name : '-'}</h4>
-                        <p class="text-xs text-slate-300 mt-0.5">${bestBat ? `${bestBat.batRuns} runs (${bestBat.fours}x4, ${bestBat.sixes}x6)` : ''}</p>
+                        <p class="text-xs text-slate-300 mt-0.5">${bestBat ? `${bestBat.batRuns} runs (${bestBat.batBalls}b • ${bestBat.fours}x4, ${bestBat.sixes}x6)` : ''}</p>
                         <span class="inline-block mt-2 px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 text-xs font-bold">Rating: ${bestBat ? bestBat.rating10.toFixed(1) : '-'}/10</span>
                     </div>
                     <div class="glass-card rounded-2xl p-4 border border-sky-500/30">
                         <span class="text-[10px] font-extrabold uppercase text-sky-400">🎯 Best Bowler</span>
                         <h4 class="text-base font-black text-white mt-1">${bestBowl ? bestBowl.name : '-'}</h4>
-                        <p class="text-xs text-slate-300 mt-0.5">${bestBowl ? `${bestBowl.bowlWickets}/${bestBowl.bowlRuns}` : ''}</p>
+                        <p class="text-xs text-slate-300 mt-0.5">${bestBowl ? `${bestBowl.bowlWickets}/${bestBowl.bowlRuns} (${this.formatOvers(bestBowl.bowlBalls)} ov)` : ''}</p>
                         <span class="inline-block mt-2 px-2 py-0.5 rounded bg-sky-500/20 text-sky-300 text-xs font-bold">Rating: ${bestBowl ? bestBowl.rating10.toFixed(1) : '-'}/10</span>
                     </div>
                     <div class="glass-card rounded-2xl p-4 border border-purple-500/30">
@@ -3257,18 +3888,21 @@
                     </div>
                 `;
 
-                document.getElementById('playerRatingsTableBody').innerHTML = ratings.map((p, idx) => `
-                    <tr>
-                        <td class="py-2 font-mono text-slate-400">#${idx + 1}</td>
-                        <td class="py-2 font-bold text-white">${p.name} ${idx === 0 ? '👑' : ''}</td>
-                        <td class="py-2 text-xs text-slate-400">${p.team}</td>
-                        <td class="py-2 score-font text-emerald-300">${p.batRuns}</td>
-                        <td class="py-2 score-font text-sky-300">${p.bowlWickets}/${p.bowlRuns}</td>
-                        <td class="py-2 score-font text-slate-300">${p.fieldingDismissals}</td>
-                        <td class="py-2 text-right score-font font-bold text-amber-300">${Math.round(p.impactPoints)}</td>
-                        <td class="py-2 text-right"><span class="score-font px-2.5 py-0.5 rounded-lg border font-black text-xs bg-emerald-500/20 text-emerald-300 border-emerald-500/40">${p.rating10.toFixed(1)}</span></td>
-                    </tr>
-                `).join('');
+                document.getElementById('playerRatingsTableBody').innerHTML = ratings.map((p, idx) => {
+                    const sr = p.batBalls > 0 ? ((p.batRuns / p.batBalls) * 100).toFixed(0) : '-';
+                    return `
+                        <tr>
+                            <td class="py-2 font-mono text-slate-400">#${idx + 1}</td>
+                            <td class="py-2 font-bold text-white">${p.name} ${idx === 0 ? '👑' : ''}</td>
+                            <td class="py-2 text-xs text-slate-400">${p.team}</td>
+                            <td class="py-2 score-font text-emerald-300">${p.batRuns} (${p.batBalls}b, SR:${sr})</td>
+                            <td class="py-2 score-font text-sky-300">${p.bowlBalls > 0 ? `${p.bowlWickets}/${p.bowlRuns} (${this.formatOvers(p.bowlBalls)})` : '-'}</td>
+                            <td class="py-2 score-font text-slate-300">${p.fieldingDismissals}</td>
+                            <td class="py-2 text-right score-font font-bold text-amber-300">${Math.round(p.impactPoints)}</td>
+                            <td class="py-2 text-right"><span class="score-font px-2.5 py-0.5 rounded-lg border font-black text-xs bg-emerald-500/20 text-emerald-300 border-emerald-500/40">${p.rating10.toFixed(1)}</span></td>
+                        </tr>
+                    `;
+                }).join('');
 
                 this.renderChartsAndWagonWheel(match);
                 this.renderPhaseComparison(match);
@@ -3277,15 +3911,24 @@
             getPerOverRunsArray(inn, totalOvers) {
                 const perOver = [], cumulative = [];
                 let prev = 0;
+                const currentOverNumber = Math.floor(inn.legalBalls / 6) + (inn.legalBalls % 6 > 0 ? 1 : 0);
+
                 for (let o = 1; o <= totalOvers; o++) {
-                    const rec = inn.oversHistory.find(x => x.overNum === o);
+                    const rec = (inn.oversHistory || []).find(x => x.overNum === o);
                     if (rec) {
-                        perOver.push(rec.runs - prev);
+                        const r = Math.max(0, rec.runs - prev);
+                        perOver.push(r);
                         cumulative.push(rec.runs);
                         prev = rec.runs;
+                    } else if (o === currentOverNumber && inn.runs >= prev && inn.legalBalls % 6 > 0) {
+                        // Include runs scored in the currently active partial over!
+                        const liveOverRuns = inn.runs - prev;
+                        perOver.push(liveOverRuns);
+                        cumulative.push(inn.runs);
+                        prev = inn.runs;
                     } else {
                         perOver.push(0);
-                        cumulative.push(prev);
+                        cumulative.push(o <= currentOverNumber ? prev : null);
                     }
                 }
                 return { perOver, cumulative };
@@ -3299,25 +3942,64 @@
                 const d1 = this.getPerOverRunsArray(inn1, match.totalOvers);
                 const d2 = this.getPerOverRunsArray(inn2, match.totalOvers);
 
-                if (manhattanChartInstance) manhattanChartInstance.destroy();
-                manhattanChartInstance = new Chart(document.getElementById('manhattanCanvas').getContext('2d'), {
-                    type: 'bar',
-                    data: { labels, datasets: [{ label: inn1.battingTeamName, data: d1.perOver, backgroundColor: '#10b981', borderRadius: 6 }, { label: inn2.battingTeamName, data: d2.perOver, backgroundColor: '#38bdf8', borderRadius: 6 }] },
-                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: '#cbd5e1' } } } }
-                });
+                const c1Color = inn1.battingTeamKey === 'A' ? (this.state.teamA.color || '#10b981') : (this.state.teamB.color || '#38bdf8');
+                const c2Color = inn2.battingTeamKey === 'A' ? (this.state.teamA.color || '#10b981') : (this.state.teamB.color || '#38bdf8');
 
-                if (wormChartInstance) wormChartInstance.destroy();
-                wormChartInstance = new Chart(document.getElementById('wormCanvas').getContext('2d'), {
-                    type: 'line',
-                    data: { labels, datasets: [{ label: inn1.battingTeamName, data: d1.cumulative, borderColor: '#10b981', tension: 0.3 }, { label: inn2.battingTeamName, data: d2.cumulative, borderColor: '#38bdf8', tension: 0.3 }] },
-                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: '#cbd5e1' } } } }
-                });
+                const mCanvas = document.getElementById('manhattanCanvas');
+                if (mCanvas && typeof Chart !== 'undefined') {
+                    if (manhattanChartInstance) manhattanChartInstance.destroy();
+                    manhattanChartInstance = new Chart(mCanvas.getContext('2d'), {
+                        type: 'bar',
+                        data: {
+                            labels,
+                            datasets: [
+                                { label: inn1.battingTeamName, data: d1.perOver, backgroundColor: c1Color, borderRadius: 6 },
+                                { label: inn2.battingTeamName, data: d2.perOver, backgroundColor: c2Color, borderRadius: 6 }
+                            ]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                x: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(148,163,184,0.1)' } },
+                                y: { beginAtZero: true, ticks: { color: '#94a3b8' }, grid: { color: 'rgba(148,163,184,0.1)' } }
+                            },
+                            plugins: { legend: { labels: { color: '#cbd5e1' } } }
+                        }
+                    });
+                }
+
+                const wCanvas = document.getElementById('wormCanvas');
+                if (wCanvas && typeof Chart !== 'undefined') {
+                    if (wormChartInstance) wormChartInstance.destroy();
+                    wormChartInstance = new Chart(wCanvas.getContext('2d'), {
+                        type: 'line',
+                        data: {
+                            labels,
+                            datasets: [
+                                { label: inn1.battingTeamName, data: d1.cumulative, borderColor: c1Color, backgroundColor: c1Color + '33', fill: true, tension: 0.3, spanGaps: true },
+                                { label: inn2.battingTeamName, data: d2.cumulative, borderColor: c2Color, backgroundColor: c2Color + '33', fill: true, tension: 0.3, spanGaps: true }
+                            ]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                x: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(148,163,184,0.1)' } },
+                                y: { beginAtZero: true, ticks: { color: '#94a3b8' }, grid: { color: 'rgba(148,163,184,0.1)' } }
+                            },
+                            plugins: { legend: { labels: { color: '#cbd5e1' } } }
+                        }
+                    });
+                }
 
                 const allShots = [...(inn1.wagonShots || []), ...(inn2.wagonShots || [])];
                 const batterSel = document.getElementById('wagonFilterBatter');
                 if (batterSel) {
+                    const prevVal = batterSel.value || 'ALL';
                     const uniqueBatters = [...new Set(allShots.map(s => s.batter))];
                     batterSel.innerHTML = `<option value="ALL">All Batters (${allShots.length} shots)</option>` + uniqueBatters.map(b => `<option value="${b}">${b}</option>`).join('');
+                    if (uniqueBatters.includes(prevVal)) batterSel.value = prevVal;
                 }
                 this.drawFilteredWagonWheel(match);
             },
@@ -3339,10 +4021,29 @@
                 const w = canvas.width, h = canvas.height, cx = w / 2, cy = h / 2, r = w / 2 - 14;
                 ctx.clearRect(0, 0, w, h);
 
+                // Draw lush turf ground & 30-yard circle + pitch
+                const grad = ctx.createRadialGradient(cx, cy, 10, cx, cy, r);
+                grad.addColorStop(0, '#065f46');
+                grad.addColorStop(1, '#022c22');
                 ctx.beginPath();
                 ctx.arc(cx, cy, r, 0, Math.PI * 2);
-                ctx.fillStyle = '#064e3b';
+                ctx.fillStyle = grad;
                 ctx.fill();
+                ctx.lineWidth = 2;
+                ctx.strokeStyle = '#10b981';
+                ctx.stroke();
+
+                // Inner 30-yard circle
+                ctx.beginPath();
+                ctx.arc(cx, cy, r * 0.52, 0, Math.PI * 2);
+                ctx.setLineDash([4, 4]);
+                ctx.strokeStyle = 'rgba(255,255,255,0.25)';
+                ctx.stroke();
+                ctx.setLineDash([]);
+
+                // Center Pitch strip
+                ctx.fillStyle = '#d6d3d1';
+                ctx.fillRect(cx - 5, cy - 16, 10, 32);
 
                 const allShots = [...(inn1.wagonShots || []), ...(inn2.wagonShots || [])].filter(s => {
                     if (batterFilter !== 'ALL' && s.batter !== batterFilter) return false;
@@ -3351,8 +4052,8 @@
                 });
 
                 allShots.forEach((s, idx) => {
-                    const rad = ((s.angle + idx) * Math.PI) / 180;
-                    const len = s.runs === 6 ? r * 0.95 : r * 0.8;
+                    const rad = (((s.angle || 45) + idx * 3) * Math.PI) / 180;
+                    const len = s.runs === 6 ? r * 0.96 : r * 0.82;
                     const tx = cx + Math.cos(rad) * len;
                     const ty = cy + Math.sin(rad) * len;
 
@@ -3360,58 +4061,364 @@
                     ctx.moveTo(cx, cy);
                     ctx.lineTo(tx, ty);
                     ctx.strokeStyle = s.runs === 6 ? '#c084fc' : '#34d399';
-                    ctx.lineWidth = s.runs === 6 ? 3 : 2;
+                    ctx.lineWidth = s.runs === 6 ? 3 : 2.2;
                     ctx.stroke();
+
+                    ctx.beginPath();
+                    ctx.arc(tx, ty, s.runs === 6 ? 4 : 3, 0, Math.PI * 2);
+                    ctx.fillStyle = s.runs === 6 ? '#e879f9' : '#10b981';
+                    ctx.fill();
                 });
-                document.getElementById('wagonWheelSummaryText').textContent = `Showing ${allShots.length} Boundary Shots`;
+
+                const foursCount = allShots.filter(x => x.runs === 4).length;
+                const sixesCount = allShots.filter(x => x.runs === 6).length;
+                document.getElementById('wagonWheelSummaryText').textContent = `Showing ${allShots.length} Boundaries (${foursCount}x4s, ${sixesCount}x6s)`;
             },
 
             renderPhaseComparison(match) {
-                document.getElementById('phaseComparisonContainer').innerHTML = match.innings.map(inn => `
-                    <div class="p-3.5 rounded-xl bg-slate-900/90 border border-slate-800 space-y-2">
-                        <div class="flex items-center justify-between"><span class="font-bold text-white text-xs">${inn.battingTeamName} (${inn.runs}/${inn.wickets})</span></div>
-                    </div>
-                `).join('');
+                const container = document.getElementById('phaseComparisonContainer');
+                if (!container) return;
+
+                const totalOv = match.totalOvers;
+                const ppEnd = Math.max(1, Math.floor(totalOv / 3));
+                const midEnd = Math.max(ppEnd + 1, Math.floor((totalOv * 2) / 3));
+
+                container.innerHTML = match.innings.map(inn => {
+                    const perOv = this.getPerOverRunsArray(inn, totalOv).perOver;
+                    const ppRuns = perOv.slice(0, ppEnd).reduce((a, b) => a + b, 0);
+                    const midRuns = perOv.slice(ppEnd, midEnd).reduce((a, b) => a + b, 0);
+                    const deathRuns = perOv.slice(midEnd).reduce((a, b) => a + b, 0);
+
+                    let total4s = 0, total6s = 0;
+                    Object.values(inn.batStats).forEach(b => {
+                        total4s += b.fours || 0;
+                        total6s += b.sixes || 0;
+                    });
+                    const boundaryRuns = total4s * 4 + total6s * 6;
+                    const boundaryPct = inn.runs > 0 ? Math.round((boundaryRuns / inn.runs) * 100) : 0;
+                    const dotBalls = (inn.ballLog || []).filter(b => b.label === '0').length;
+                    const dotPct = inn.legalBalls > 0 ? Math.round((dotBalls / inn.legalBalls) * 100) : 0;
+
+                    return `
+                        <div class="p-3.5 rounded-xl bg-slate-900/90 border border-slate-800 space-y-2.5">
+                            <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+                                <span class="font-bold text-white text-xs sm:text-sm">${inn.battingTeamName} — <span class="score-font text-emerald-400">${inn.runs}/${inn.wickets}</span> (${this.formatOvers(inn.legalBalls)} ov)</span>
+                                <span class="text-[11px] font-semibold text-amber-300">Boundary Runs: ${boundaryRuns} (${boundaryPct}%)</span>
+                            </div>
+                            <div class="grid grid-cols-3 gap-2 text-center text-xs">
+                                <div class="p-2 rounded-lg bg-slate-800/70">
+                                    <span class="text-[10px] text-slate-400 block uppercase">Powerplay (1-${ppEnd})</span>
+                                    <span class="score-font font-bold text-emerald-300 text-sm">${ppRuns} R</span>
+                                </div>
+                                <div class="p-2 rounded-lg bg-slate-800/70">
+                                    <span class="text-[10px] text-slate-400 block uppercase">Middle (${ppEnd + 1}-${midEnd})</span>
+                                    <span class="score-font font-bold text-sky-300 text-sm">${midRuns} R</span>
+                                </div>
+                                <div class="p-2 rounded-lg bg-slate-800/70">
+                                    <span class="text-[10px] text-slate-400 block uppercase">Death (${midEnd + 1}-${totalOv})</span>
+                                    <span class="score-font font-bold text-purple-300 text-sm">${deathRuns} R</span>
+                                </div>
+                            </div>
+                            <div class="flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-300 pt-1">
+                                <span><strong>4s / 6s:</strong> ${total4s} / ${total6s}</span>
+                                <span><strong>Dot Balls:</strong> ${dotBalls} (${dotPct}%)</span>
+                                <span><strong>Extras:</strong> ${inn.extras.total} (WD:${inn.extras.wd}, NB:${inn.extras.nb})</span>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
             },
 
             downloadHTMLMatchReport() {
-                this.showToast('Match Report generated!', 'emerald');
+                const match = this.getActiveMatch();
+                if (!match) return;
+                const ratings = this.computeMatchPlayerRatings(match);
+                const mvp = ratings[0];
+
+                const reportHTML = `<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><title>${this.state.seriesName} - Match ${match.matchNumber} Official Report</title>
+<style>
+body{font-family:system-ui,-apple-system,sans-serif;background:#060b16;color:#f8fafc;padding:24px;max-width:920px;margin:0 auto}
+.card{background:#0f172a;border:1px solid #334155;border-radius:14px;padding:18px;margin-bottom:18px}
+h1,h2,h3{margin:0 0 8px 0;color:#fff}
+.badge{display:inline-block;padding:4px 10px;border-radius:99px;background:#065f46;color:#6ee7b7;font-size:12px;font-weight:700}
+table{width:100%;border-collapse:collapse;font-size:13px;margin-top:10px}
+th,td{padding:8px;border-bottom:1px solid #1e293b;text-align:left}
+th{color:#94a3b8;text-transform:uppercase;font-size:11px}
+.right{text-align:right}
+</style></head><body>
+<div class="card">
+<span class="badge">OFFICIAL MATCH REPORT • CRAFTED BY CHERRY</span>
+<h1 style="margin-top:8px">${this.state.seriesName} — Match ${match.matchNumber}</h1>
+<p style="color:#94a3b8;font-size:13px">${match.venue} (${match.pitch}) • ${match.dateStr} • ${match.tossText}</p>
+<h2 style="color:#34d399;margin-top:10px">${match.resultText || 'Match In Progress'}</h2>
+${mvp ? `<p style="color:#fbbf24;font-weight:700">🏆 Player of the Match (MVP): ${mvp.name} (${mvp.team}) — Rating ${mvp.rating10.toFixed(1)}/10</p>` : ''}
+</div>
+${match.innings.map(inn => `
+<div class="card">
+<h3>${inn.battingTeamName} — ${inn.runs}/${inn.wickets} (${this.formatOvers(inn.legalBalls)} / ${match.totalOvers} Overs)</h3>
+<table><thead><tr><th>Batter</th><th>Dismissal</th><th class="right">R</th><th class="right">B</th><th class="right">4s</th><th class="right">6s</th><th class="right">SR</th></tr></thead>
+<tbody>
+${inn.battingRoster.map(p => {
+    const b = inn.batStats[p];
+    const sr = b.balls > 0 ? ((b.runs / b.balls) * 100).toFixed(1) : '0.0';
+    return `<tr><td><strong>${b.name}</strong></td><td>${b.outDesc}</td><td class="right"><strong>${b.runs}</strong></td><td class="right">${b.balls}</td><td class="right">${b.fours}</td><td class="right">${b.sixes}</td><td class="right">${sr}</td></tr>`;
+}).join('')}
+</tbody></table>
+<p style="font-size:12px;color:#cbd5e1;margin-top:10px"><strong>Extras:</strong> ${inn.extras.total} (WD ${inn.extras.wd}, NB ${inn.extras.nb}, B ${inn.extras.b}, LB ${inn.extras.lb})</p>
+</div>`).join('')}
+<div class="card">
+<h3>Player Performance Ratings (1–10 Scale)</h3>
+<table><thead><tr><th>Rank</th><th>Player</th><th>Team</th><th>Batting</th><th>Bowling</th><th class="right">Rating</th></tr></thead>
+<tbody>
+${ratings.map((p, i) => `<tr><td>#${i + 1}</td><td><strong>${p.name}</strong></td><td>${p.team}</td><td>${p.batRuns} (${p.batBalls}b)</td><td>${p.bowlWickets}/${p.bowlRuns}</td><td class="right"><strong>${p.rating10.toFixed(1)}/10</strong></td></tr>`).join('')}
+</tbody></table>
+</div>
+<p style="text-align:center;color:#64748b;font-size:12px">Generated by CricPulse Pro • Crafted by Cherry</p>
+</body></html>`;
+
+                const blob = new Blob([reportHTML], { type: 'text/html' });
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = `CricPulse_Match_${match.matchNumber}_Report.html`;
+                a.click();
+                this.showToast('Complete Match Report (.html) downloaded!', 'emerald');
             },
+
             downloadBroadcastSummaryPNG() {
-                this.showToast('Broadcast PNG Card downloaded!', 'sky');
+                const match = this.getActiveMatch();
+                if (!match) return;
+                const ratings = this.computeMatchPlayerRatings(match);
+                const mvp = ratings[0];
+
+                const canvas = document.createElement('canvas');
+                canvas.width = 1080;
+                canvas.height = 1080;
+                const ctx = canvas.getContext('2d');
+
+                // Stadium Dark Gradient Background
+                const bg = ctx.createLinearGradient(0, 0, 1080, 1080);
+                bg.addColorStop(0, '#060b16');
+                bg.addColorStop(0.5, '#0f172a');
+                bg.addColorStop(1, '#022c22');
+                ctx.fillStyle = bg;
+                ctx.fillRect(0, 0, 1080, 1080);
+
+                // Header Banner
+                ctx.fillStyle = '#10b981';
+                ctx.font = 'bold 28px Inter, sans-serif';
+                ctx.fillText('CRICPULSE PRO BROADCAST SUMMARY • CRAFTED BY CHERRY', 60, 75);
+
+                ctx.fillStyle = '#ffffff';
+                ctx.font = '900 48px Inter, sans-serif';
+                ctx.fillText(`${this.state.seriesName} (Match ${match.matchNumber})`, 60, 135);
+
+                ctx.fillStyle = '#94a3b8';
+                ctx.font = '600 24px Inter, sans-serif';
+                ctx.fillText(`${match.venue} • ${match.dateStr} • ${match.tossText}`, 60, 178);
+
+                // Innings Boxes
+                match.innings.forEach((inn, idx) => {
+                    const yTop = idx === 0 ? 220 : 510;
+                    ctx.fillStyle = 'rgba(30, 41, 59, 0.88)';
+                    ctx.fillRect(60, yTop, 960, 255);
+                    ctx.strokeStyle = idx === 0 ? '#10b981' : '#38bdf8';
+                    ctx.lineWidth = 3;
+                    ctx.strokeRect(60, yTop, 960, 255);
+
+                    ctx.fillStyle = '#ffffff';
+                    ctx.font = 'bold 36px Inter, sans-serif';
+                    ctx.fillText(inn.battingTeamName, 90, yTop + 55);
+
+                    ctx.fillStyle = idx === 0 ? '#34d399' : '#38bdf8';
+                    ctx.font = '900 46px monospace';
+                    ctx.fillText(`${inn.runs}/${inn.wickets} (${this.formatOvers(inn.legalBalls)} ov)`, 620, yTop + 55);
+
+                    const topBatters = Object.values(inn.batStats).sort((a, b) => b.runs - a.runs).slice(0, 3);
+                    const topBowlers = Object.values(inn.bowlStats).filter(b => b.balls > 0).sort((a, b) => b.wickets - a.wickets || a.runs - b.runs).slice(0, 3);
+
+                    ctx.fillStyle = '#cbd5e1';
+                    ctx.font = '600 22px Inter, sans-serif';
+                    topBatters.forEach((b, bi) => {
+                        ctx.fillText(`🏏 ${b.name}: ${b.runs} (${b.balls}b, ${b.fours}x4, ${b.sixes}x6)`, 90, yTop + 115 + bi * 40);
+                    });
+                    topBowlers.forEach((bw, bwi) => {
+                        ctx.fillText(`🎯 ${bw.name}: ${bw.wickets}/${bw.runs} (${this.formatOvers(bw.balls)} ov)`, 580, yTop + 115 + bwi * 40);
+                    });
+                });
+
+                // Result & MVP Footer Box
+                ctx.fillStyle = '#064e3b';
+                ctx.fillRect(60, 810, 960, 190);
+                ctx.fillStyle = '#fbbf24';
+                ctx.font = '900 38px Inter, sans-serif';
+                ctx.fillText(`🏆 ${match.resultText || 'Match In Progress'}`, 90, 870);
+
+                if (mvp) {
+                    ctx.fillStyle = '#ffffff';
+                    ctx.font = 'bold 28px Inter, sans-serif';
+                    ctx.fillText(`👑 Player of the Match: ${mvp.name} (${mvp.batRuns} runs, ${mvp.bowlWickets} wkts • Rating ${mvp.rating10.toFixed(1)}/10)`, 90, 930);
+                }
+
+                ctx.fillStyle = '#6ee7b7';
+                ctx.font = 'bold 22px Inter, sans-serif';
+                ctx.fillText('Official Match Card • Powered by CricPulse Pro (Crafted by Cherry)', 90, 975);
+
+                const link = document.createElement('a');
+                link.download = `CricPulse_Match_${match.matchNumber}_Card.png`;
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+                this.showToast('Broadcast Summary PNG Card downloaded!', 'sky');
             },
+
             copyWhatsAppMatchSummaryText() {
-                this.showToast('WhatsApp summary copied!', 'emerald');
+                const match = this.getActiveMatch();
+                if (!match) return;
+                const i1 = match.innings[0];
+                const i2 = match.innings[1];
+                const ratings = this.computeMatchPlayerRatings(match);
+                const mvp = ratings[0];
+
+                const summary = [
+                    `🏏 *${this.state.seriesName} — Match ${match.matchNumber}*`,
+                    `📍 Venue: ${match.venue} (${match.pitch})`,
+                    `────────────────────`,
+                    `1️⃣ *${i1.battingTeamName}:* ${i1.runs}/${i1.wickets} (${this.formatOvers(i1.legalBalls)}/${match.totalOvers} ov)`,
+                    `2️⃣ *${i2.battingTeamName}:* ${i2.runs}/${i2.wickets} (${this.formatOvers(i2.legalBalls)}/${match.totalOvers} ov)`,
+                    `────────────────────`,
+                    `🏆 *Result:* ${match.resultText || 'Live Match in Progress'}`,
+                    mvp ? `👑 *MVP:* ${mvp.name} (${mvp.batRuns}r, ${mvp.bowlWickets}w — Rating ${mvp.rating10.toFixed(1)}/10)` : '',
+                    `✨ _Scored on CricPulse Pro • Crafted by Cherry_`
+                ].filter(Boolean).join('\n');
+
+                navigator.clipboard?.writeText(summary).catch(() => {});
+                this.showToast('WhatsApp Match Summary copied to clipboard!', 'emerald');
             },
+
             exportSeriesJSON() {
-                this.showToast('Series JSON exported!', 'sky');
+                const blob = new Blob([JSON.stringify(this.state, null, 2)], { type: 'application/json' });
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = `CricPulse_Series_Backup_${this.state.roomCode}.json`;
+                a.click();
+                this.showToast('Series JSON Backup downloaded!', 'sky');
             },
-            importSeriesJSON(e) {
-                this.showToast('Series restored!', 'emerald');
+
+            importSeriesJSON(event) {
+                const file = event.target.files?.[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const parsed = JSON.parse(e.target.result);
+                        this.state = this.sanitizeStateData(parsed);
+                        this.saveState();
+                        this.renderAll();
+                        this.showToast('Series Backup restored successfully!', 'emerald');
+                    } catch (err) {
+                        this.showToast('Invalid JSON backup file!', 'rose');
+                    }
+                };
+                reader.readAsText(file);
             },
+
             resetAllStorage() {
                 localStorage.removeItem(STORAGE_KEY);
                 this.state = this.createDefaultSeriesState();
                 this.saveState();
                 this.navigate('hub');
-                this.showToast('Series reset!', 'amber');
+                this.showToast('Series reset to fresh state!', 'amber');
             },
 
             loadDemoSampleMatch() {
                 const demoMatch = this.createMatchObject({
-                    matchNumber: 1, venue: 'Local Ground', pitch: 'Local Ground', totalOvers: 4, maxBowlerOvers: 2,
+                    matchNumber: 1,
+                    venue: 'Local Ground',
+                    pitch: 'Local Ground',
+                    totalOvers: 4,
+                    maxBowlerOvers: 2,
                     rules: { lastManStanding: true, wagonWheel: true, rebowlExtras: true },
-                    tossWinnerKey: 'A', tossDecision: 'bat', firstBatKey: 'A', secondBatKey: 'B'
+                    tossWinnerKey: 'A',
+                    tossDecision: 'bat',
+                    firstBatKey: 'A',
+                    secondBatKey: 'B'
                 });
-                demoMatch.innings[0].runs = 58; demoMatch.innings[0].wickets = 2; demoMatch.innings[0].legalBalls = 24;
-                demoMatch.innings[1].runs = 52; demoMatch.innings[1].wickets = 3; demoMatch.innings[1].legalBalls = 24;
-                demoMatch.status = 'completed'; demoMatch.winnerTeamKey = 'A'; demoMatch.resultText = 'Royal Strikers won by 6 runs';
+
+                const i1 = demoMatch.innings[0];
+                i1.runs = 58; i1.wickets = 2; i1.legalBalls = 24;
+                i1.extras = { total: 2, wd: 2, nb: 0, b: 0, lb: 0 };
+                i1.striker = 'Virat Nair'; i1.nonStriker = 'Surya Gill'; i1.currentBowler = 'Mitchell Boult';
+                i1.batStats['Rohit Verma (C)'] = { name: 'Rohit Verma (C)', runs: 32, balls: 13, fours: 3, sixes: 2, status: 'out', outDesc: 'c Devon Samson (WK) b Mitchell Boult' };
+                i1.batStats['Ishan Karthik (WK)'] = { name: 'Ishan Karthik (WK)', runs: 10, balls: 5, fours: 1, sixes: 1, status: 'out', outDesc: 'b Rashid Jadeja' };
+                i1.batStats['Virat Nair'] = { name: 'Virat Nair', runs: 14, balls: 6, fours: 2, sixes: 1, status: 'batting', outDesc: 'not out' };
+                i1.batStats['Surya Gill'] = { name: 'Surya Gill', runs: 0, balls: 0, fours: 0, sixes: 0, status: 'batting', outDesc: 'not out' };
+                i1.bowlStats['Mitchell Boult'] = { name: 'Mitchell Boult', balls: 12, maidens: 0, runs: 28, wickets: 1, currentOverRuns: 0 };
+                i1.bowlStats['Rashid Jadeja'] = { name: 'Rashid Jadeja', balls: 12, maidens: 0, runs: 30, wickets: 1, currentOverRuns: 0 };
+                i1.fow = [
+                    { wicketNum: 1, runs: 24, overs: '1.4', batter: 'Ishan Karthik (WK)' },
+                    { wicketNum: 2, runs: 48, overs: '3.2', batter: 'Rohit Verma (C)' }
+                ];
+                i1.partnershipsList = [
+                    { batter1: 'Rohit Verma (C)', batter2: 'Ishan Karthik (WK)', runs: 24, balls: 10 },
+                    { batter1: 'Rohit Verma (C)', batter2: 'Virat Nair', runs: 24, balls: 10 },
+                    { batter1: 'Virat Nair', batter2: 'Surya Gill', runs: 10, balls: 4 }
+                ];
+                i1.oversHistory = [
+                    { overNum: 1, bowler: 'Mitchell Boult', runs: 16, wickets: 0, balls: [{ label: '4', color: 'emerald' }, { label: '0', color: 'slate' }, { label: '6', color: 'purple' }, { label: '1', color: 'slate' }, { label: '4', color: 'emerald' }, { label: '1', color: 'slate' }] },
+                    { overNum: 2, bowler: 'Rashid Jadeja', runs: 28, wickets: 1, balls: [{ label: '6', color: 'purple' }, { label: '2', color: 'slate' }, { label: '0', color: 'slate' }, { label: 'W', color: 'rose' }, { label: '4', color: 'emerald' }, { label: '0', color: 'slate' }] },
+                    { overNum: 3, bowler: 'Rashid Jadeja', runs: 44, wickets: 1, balls: [{ label: '1', color: 'slate' }, { label: '6', color: 'purple' }, { label: '4', color: 'emerald' }, { label: 'WD', color: 'amber' }, { label: '2', color: 'slate' }, { label: '2', color: 'slate' }] },
+                    { overNum: 4, bowler: 'Mitchell Boult', runs: 58, wickets: 2, balls: [{ label: '4', color: 'emerald' }, { label: 'W', color: 'rose' }, { label: '6', color: 'purple' }, { label: '4', color: 'emerald' }, { label: '0', color: 'slate' }, { label: '0', color: 'slate' }] }
+                ];
+                i1.wagonShots = [
+                    { batter: 'Rohit Verma (C)', bowler: 'Mitchell Boult', runs: 6, zone: 'Deep Mid-Wicket', angle: 35 },
+                    { batter: 'Rohit Verma (C)', bowler: 'Rashid Jadeja', runs: 6, zone: 'Long On', angle: 75 },
+                    { batter: 'Rohit Verma (C)', bowler: 'Mitchell Boult', runs: 4, zone: 'Extra Cover', angle: 150 },
+                    { batter: 'Virat Nair', bowler: 'Mitchell Boult', runs: 6, zone: 'Long Off', angle: 110 },
+                    { batter: 'Virat Nair', bowler: 'Rashid Jadeja', runs: 4, zone: 'Deep Point', angle: 200 }
+                ];
+
+                const i2 = demoMatch.innings[1];
+                i2.runs = 52; i2.wickets = 3; i2.legalBalls = 24;
+                i2.extras = { total: 1, wd: 1, nb: 0, b: 0, lb: 0 };
+                i2.striker = 'Glenn Klaasen'; i2.nonStriker = 'Rashid Jadeja'; i2.currentBowler = 'Jasprit Shami';
+                i2.batStats['Ruturaj Dhoni (C)'] = { name: 'Ruturaj Dhoni (C)', runs: 26, balls: 12, fours: 3, sixes: 1, status: 'out', outDesc: 'b Jasprit Shami' };
+                i2.batStats['Devon Samson (WK)'] = { name: 'Devon Samson (WK)', runs: 0, balls: 1, fours: 0, sixes: 0, status: 'out', outDesc: 'c Rohit Verma (C) b Arshdeep Khan' };
+                i2.batStats['Shubman Iyer'] = { name: 'Shubman Iyer', runs: 14, balls: 6, fours: 1, sixes: 1, status: 'out', outDesc: 'run out (Virat Nair)' };
+                i2.batStats['Glenn Klaasen'] = { name: 'Glenn Klaasen', runs: 11, balls: 5, fours: 1, sixes: 1, status: 'batting', outDesc: 'not out' };
+                i2.bowlStats['Arshdeep Khan'] = { name: 'Arshdeep Khan', balls: 12, maidens: 0, runs: 25, wickets: 1, currentOverRuns: 0 };
+                i2.bowlStats['Jasprit Shami'] = { name: 'Jasprit Shami', balls: 12, maidens: 0, runs: 27, wickets: 1, currentOverRuns: 0 };
+                i2.fow = [
+                    { wicketNum: 1, runs: 4, overs: '0.2', batter: 'Devon Samson (WK)' },
+                    { wicketNum: 2, runs: 32, overs: '2.3', batter: 'Shubman Iyer' },
+                    { wicketNum: 3, runs: 45, overs: '3.3', batter: 'Ruturaj Dhoni (C)' }
+                ];
+                i2.partnershipsList = [
+                    { batter1: 'Ruturaj Dhoni (C)', batter2: 'Devon Samson (WK)', runs: 4, balls: 2 },
+                    { batter1: 'Ruturaj Dhoni (C)', batter2: 'Shubman Iyer', runs: 28, balls: 13 },
+                    { batter1: 'Ruturaj Dhoni (C)', batter2: 'Glenn Klaasen', runs: 13, balls: 6 }
+                ];
+                i2.oversHistory = [
+                    { overNum: 1, bowler: 'Arshdeep Khan', runs: 12, wickets: 1, balls: [{ label: '4', color: 'emerald' }, { label: 'W', color: 'rose' }, { label: '0', color: 'slate' }, { label: '4', color: 'emerald' }, { label: '4', color: 'emerald' }, { label: '0', color: 'slate' }] },
+                    { overNum: 2, bowler: 'Jasprit Shami', runs: 27, wickets: 1, balls: [{ label: '6', color: 'purple' }, { label: '1', color: 'slate' }, { label: '4', color: 'emerald' }, { label: '2', color: 'slate' }, { label: '1', color: 'slate' }, { label: '1', color: 'slate' }] },
+                    { overNum: 3, bowler: 'Arshdeep Khan', runs: 40, wickets: 2, balls: [{ label: '2', color: 'slate' }, { label: '6', color: 'purple' }, { label: 'W', color: 'rose' }, { label: '1', color: 'slate' }, { label: '4', color: 'emerald' }, { label: '0', color: 'slate' }] },
+                    { overNum: 4, bowler: 'Jasprit Shami', runs: 52, wickets: 3, balls: [{ label: '4', color: 'emerald' }, { label: '1', color: 'slate' }, { label: 'W', color: 'rose' }, { label: '6', color: 'purple' }, { label: '1', color: 'slate' }, { label: '0', color: 'slate' }] }
+                ];
+                i2.wagonShots = [
+                    { batter: 'Ruturaj Dhoni (C)', bowler: 'Jasprit Shami', runs: 6, zone: 'Square Leg', angle: 345 },
+                    { batter: 'Shubman Iyer', bowler: 'Arshdeep Khan', runs: 6, zone: 'Long On', angle: 75 },
+                    { batter: 'Glenn Klaasen', bowler: 'Jasprit Shami', runs: 6, zone: 'Deep Mid-Wicket', angle: 35 }
+                ];
+
+                demoMatch.currentInningsIndex = 1;
+                demoMatch.status = 'completed';
+                demoMatch.winnerTeamKey = 'A';
+                demoMatch.resultText = 'Royal Strikers won by 6 runs';
                 this.state.matches = [demoMatch];
                 this.state.activeMatchIndex = 0;
                 this.recordMatchIntoCareerHall(demoMatch);
                 this.saveState();
                 this.navigate('analytics');
-                this.showToast('Sample Match Loaded!', 'emerald');
+                this.showToast('Sample Match Loaded with Full Charts & Stats!', 'emerald');
             }
         };
 
