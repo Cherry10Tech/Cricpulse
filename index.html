@@ -890,6 +890,91 @@
             </div>
         </div>
     </div>
+
+    <!-- 6. END OF OVER / SELECT NEXT BOWLER MODAL -->
+    <div id="modal-bowler" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
+        <div class="glass-card rounded-2xl max-w-sm w-full p-5 border border-sky-500/40 space-y-4">
+            <div class="flex items-center justify-between">
+                <h3 class="text-base font-black text-sky-400 flex items-center gap-2">
+                    <i class="fa-solid fa-baseball"></i> Select Next Bowler
+                </h3>
+                <button onclick="app.closeModal('modal-bowler')" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <p class="text-xs text-slate-300">Choose the bowler for the upcoming over (Bowlers who reached max quota or bowled the last over are locked):</p>
+            <select id="nextBowlerSelect" class="w-full px-3 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs font-semibold"></select>
+            <button onclick="app.confirmNextBowler()" class="tap-btn w-full py-2.5 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-black text-xs uppercase tracking-wider">
+                Start Next Over
+            </button>
+        </div>
+    </div>
+
+    <!-- 7. 360° BOUNDARY WAGON WHEEL SHOT DIRECTION MODAL -->
+    <div id="modal-wagon" class="hidden fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
+        <div class="glass-card rounded-2xl max-w-sm w-full p-5 border border-emerald-500/40 space-y-4 text-center">
+            <div class="flex items-center justify-between">
+                <h3 class="text-sm font-black text-emerald-400 uppercase tracking-wider">
+                    <i class="fa-solid fa-compass mr-1"></i> Boundary Wagon Wheel Zone
+                </h3>
+                <button onclick="app.skipWagonWheel()" class="text-xs text-slate-400 hover:text-white font-bold">Skip</button>
+            </div>
+            <p class="text-xs text-slate-300">Tap where the boundary was hit (or tap Skip):</p>
+            <div class="grid grid-cols-2 gap-2 text-xs font-bold">
+                <button onclick="app.recordWagonZone('Third Man', 240)" class="tap-btn py-2.5 rounded-xl bg-slate-800 hover:bg-emerald-500/20 border border-slate-700 text-slate-200">↖ Third Man</button>
+                <button onclick="app.recordWagonZone('Fine Leg', 300)" class="tap-btn py-2.5 rounded-xl bg-slate-800 hover:bg-emerald-500/20 border border-slate-700 text-slate-200">↗ Fine Leg</button>
+                <button onclick="app.recordWagonZone('Deep Point', 200)" class="tap-btn py-2.5 rounded-xl bg-slate-800 hover:bg-emerald-500/20 border border-slate-700 text-slate-200">⬅ Deep Point</button>
+                <button onclick="app.recordWagonZone('Square Leg', 345)" class="tap-btn py-2.5 rounded-xl bg-slate-800 hover:bg-emerald-500/20 border border-slate-700 text-slate-200">➡ Square Leg</button>
+                <button onclick="app.recordWagonZone('Extra Cover', 150)" class="tap-btn py-2.5 rounded-xl bg-slate-800 hover:bg-emerald-500/20 border border-slate-700 text-slate-200">↙ Extra Cover</button>
+                <button onclick="app.recordWagonZone('Deep Mid-Wicket', 35)" class="tap-btn py-2.5 rounded-xl bg-slate-800 hover:bg-emerald-500/20 border border-slate-700 text-slate-200">↘ Mid-Wicket</button>
+                <button onclick="app.recordWagonZone('Long Off', 110)" class="tap-btn py-2.5 rounded-xl bg-slate-800 hover:bg-emerald-500/20 border border-slate-700 text-slate-200">⬇ Long Off</button>
+                <button onclick="app.recordWagonZone('Long On', 75)" class="tap-btn py-2.5 rounded-xl bg-slate-800 hover:bg-emerald-500/20 border border-slate-700 text-slate-200">⬇ Long On</button>
+            </div>
+            <button onclick="app.skipWagonWheel()" class="w-full py-2 rounded-xl bg-slate-800 text-slate-400 text-xs font-semibold">Skip Direction</button>
+        </div>
+    </div>
+
+    <!-- 8. DOUBLE-CONFIRMATION END MATCH MODAL -->
+    <div id="modal-endmatch" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-950/85 backdrop-blur-sm p-4">
+        <div class="glass-card rounded-2xl max-w-md w-full p-5 border border-rose-500/40 space-y-4">
+            <div class="flex items-center justify-between">
+                <h3 class="text-base font-black text-rose-400 flex items-center gap-2">
+                    <i class="fa-solid fa-flag-checkered"></i> End & Finalize Match
+                </h3>
+                <button onclick="app.closeModal('modal-endmatch')" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <!-- STEP 1: Initial Warning -->
+            <div id="endMatchStep1" class="space-y-4">
+                <div class="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-xs text-slate-200 space-y-1">
+                    <p class="font-bold text-rose-300">Step 1 of 2: Are you sure you want to end this match?</p>
+                    <p class="text-slate-400">Ending the match will finalize the result, compute player ratings, update the Series & Career Hall of Fame, and lock live ball-by-ball scoring.</p>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="app.closeModal('modal-endmatch')" class="flex-1 py-2.5 rounded-xl bg-slate-800 text-slate-300 font-bold text-xs">No, Keep Scoring</button>
+                    <button onclick="app.proceedEndMatchStep2()" class="tap-btn flex-1 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs">Yes, Proceed to Step 2 <i class="fa-solid fa-arrow-right ml-1"></i></button>
+                </div>
+            </div>
+
+            <!-- STEP 2: Final Result Confirmation / Override -->
+            <div id="endMatchStep2" class="hidden space-y-4">
+                <div class="p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-xs space-y-2">
+                    <p class="font-bold text-emerald-300">Step 2 of 2: Final Confirmation & Result Mode</p>
+                    <label class="block text-slate-300 font-semibold">Select Result Calculation:</label>
+                    <select id="endMatchResultOverride" class="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white font-semibold">
+                        <option value="AUTO">Auto-Calculate Winner from Current Score</option>
+                        <option id="endMatchOptTeamA" value="A">Force Winner: Team 1</option>
+                        <option id="endMatchOptTeamB" value="B">Force Winner: Team 2</option>
+                        <option value="TIE">Declare Match Tied (Enable Super Over)</option>
+                        <option value="NR">Match Abandoned / No Result</option>
+                    </select>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="app.closeModal('modal-endmatch')" class="flex-1 py-2.5 rounded-xl bg-slate-800 text-slate-300 font-bold text-xs">Cancel</button>
+                    <button onclick="app.finalizeMatchConfirmed()" class="tap-btn flex-1 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-black text-xs uppercase">Confirm & Lock Match</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- 9. MID-MATCH RULES, RENAME & ADD LATE PLAYER MODAL -->
     <div id="modal-midrules" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
         <div class="glass-card rounded-2xl max-w-md w-full p-5 border border-sky-500/30 space-y-4 max-h-[90vh] overflow-y-auto">
@@ -975,66 +1060,6 @@
                 <div class="flex flex-wrap gap-2 pt-2">
                     <button onclick="app.shareWhatsAppDirect()" class="tap-btn flex-1 py-2.5 rounded-xl bg-green-600 hover:bg-green-500 text-white font-extrabold text-xs flex items-center justify-center gap-1.5"><i class="fa-brands fa-whatsapp text-sm"></i> Share on WhatsApp</button>
                     <button onclick="app.copySnapshotLink()" class="tap-btn flex-1 py-2.5 rounded-xl bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 border border-sky-500/40 font-bold text-xs flex items-center justify-center gap-1.5" title="Permanent self-contained link with all match data embedded inside the URL"><i class="fa-solid fa-box-archive"></i> Copy Offline Archive Link</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- 9. MID-MATCH RULES, RENAME & ADD PLAYER MODAL -->
-    <div id="modal-midrules" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
-        <div class="glass-card rounded-2xl max-w-md w-full p-5 border border-sky-500/30 space-y-4">
-            <div class="flex items-center justify-between">
-                <h3 class="text-base font-black text-white">Mid-Match Rules & Squad Manager</h3>
-                <button onclick="app.closeModal('modal-midrules')" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
-            </div>
-            <div class="space-y-3 text-xs">
-                <label class="flex items-center justify-between p-2.5 rounded-xl bg-slate-900 border border-slate-800">
-                    <span class="font-semibold text-slate-200">Last Man Standing (Solo Batter)</span>
-                    <input id="midRuleLastMan" type="checkbox" class="w-4 h-4 accent-emerald-500">
-                </label>
-                <label class="flex items-center justify-between p-2.5 rounded-xl bg-slate-900 border border-slate-800">
-                    <span class="font-semibold text-slate-200">360° Boundary Wagon Wheel Popup</span>
-                    <input id="midRuleWagon" type="checkbox" class="w-4 h-4 accent-emerald-500">
-                </label>
-                <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-900 border border-slate-800">
-                    <span class="font-semibold text-slate-200">Total Overs per Innings</span>
-                    <input id="midRuleOvers" type="number" min="1" max="50" class="w-20 px-2 py-1 rounded-lg bg-slate-800 border border-slate-700 text-white text-center font-bold">
-                </div>
-                <div class="pt-2 border-t border-slate-800 space-y-2">
-                    <span class="block font-bold text-amber-400">✏️ Fix Player Name Typo / Rename:</span>
-                    <div class="flex gap-2">
-                        <select id="midRenameOldSelect" class="w-1/2 px-2 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white"></select>
-                        <input id="midRenameNewInput" type="text" placeholder="Corrected Name" class="w-1/2 px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white">
-                        <button onclick="app.renamePlayerMidMatch()" class="px-3 py-2 rounded-xl bg-amber-500 text-slate-950 font-bold shrink-0">Rename</button>
-                    </div>
-                </div>
-            </div>
-            <button onclick="app.saveMidMatchRules()" class="tap-btn w-full py-2.5 rounded-xl bg-emerald-500 text-slate-950 font-extrabold text-xs">Save Settings</button>
-        </div>
-    </div>
-
-    <!-- 10. SHARE LIVE SPECTATOR LINK MODAL -->
-    <div id="modal-share" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
-        <div class="glass-card rounded-2xl max-w-lg w-full p-5 border border-emerald-500/40 space-y-4">
-            <div class="flex items-center justify-between">
-                <h3 class="text-base font-black text-white flex items-center gap-2">
-                    <i class="fa-solid fa-tower-broadcast text-emerald-400"></i> Share Live Spectator Broadcast Link
-                </h3>
-                <button onclick="app.closeModal('modal-share')" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
-            </div>
-            <div class="glass-subtle rounded-xl p-3 space-y-2 text-xs">
-                <div class="flex items-center justify-between">
-                    <span class="text-slate-400 font-semibold">Live Match Room Code:</span>
-                    <span id="shareModalRoomCode" class="score-font text-base font-black text-emerald-400">CRIC-000</span>
-                </div>
-                <p class="text-[11px] text-slate-300">Friends who open your Spectator Link are locked into <strong>Read-Only Broadcast View</strong> with live 4/6/Wicket TV animations!</p>
-                <div class="flex gap-2 pt-1">
-                    <input id="shareSpectatorUrlInput" type="text" readonly class="flex-1 px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-[11px] text-slate-300 font-mono">
-                    <button onclick="app.copySpectatorLink()" class="tap-btn px-3 py-2 rounded-xl bg-emerald-500 text-slate-950 font-extrabold text-xs shrink-0"><i class="fa-solid fa-copy mr-1"></i>Copy Link</button>
-                </div>
-                <div class="flex flex-wrap gap-2 pt-2">
-                    <button onclick="app.shareWhatsAppDirect()" class="tap-btn flex-1 py-2.5 rounded-xl bg-green-600 hover:bg-green-500 text-white font-extrabold text-xs flex items-center justify-center gap-1.5"><i class="fa-brands fa-whatsapp text-sm"></i> Share on WhatsApp</button>
-                    <button onclick="app.copySnapshotLink()" class="tap-btn flex-1 py-2.5 rounded-xl bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 border border-sky-500/40 font-bold text-xs flex items-center justify-center gap-1.5" title="Archive link"><i class="fa-solid fa-box-archive"></i> Copy Archive Link</button>
                 </div>
             </div>
         </div>
@@ -1490,97 +1515,6 @@
                     }
                     warnEl.classList.remove('hidden');
                 }
-            },
-
-            getDatabaseBaseUrl() {
-                return '';
-            },
-
-            async pushToCloudRoom() {
-                const dot = document.getElementById('cloudStatusDot');
-                const txt = document.getElementById('cloudStatusText');
-                if (dot) dot.className = 'w-2 h-2 rounded-full bg-emerald-400 inline-block';
-                if (txt) txt.textContent = 'Auto-Saved Locally';
-            },
-
-            async pullFromCloudRoom(showFeedback = false) {
-                if (showFeedback) this.showToast('Live Score Refreshed!', 'emerald');
-            },
-
-            startSpectatorPolling() {
-                if (this.spectatorPollInterval) clearInterval(this.spectatorPollInterval);
-                this.spectatorPollInterval = setInterval(() => {
-                    if (this.isSpectator) this.pullFromCloudRoom(false);
-                }, 3500);
-            },
-
-            applySpectatorLockdownUI() {
-                const banner = document.getElementById('spectatorModeBanner');
-                if (banner) banner.classList.toggle('hidden', !this.isSpectator);
-
-                document.querySelectorAll('.scorer-only').forEach(el => {
-                    if (this.isSpectator) {
-                        el.classList.add('hidden');
-                    } else {
-                        if (el.id !== 'btnStartNextSeriesMatch' && el.id !== 'btnStartSuperOver') {
-                            el.classList.remove('hidden');
-                        }
-                    }
-                });
-
-                const leftCol = document.getElementById('liveLeftCol');
-                if (leftCol) {
-                    leftCol.className = this.isSpectator ? 'lg:col-span-12 space-y-4' : 'lg:col-span-7 space-y-4';
-                }
-            },
-
-            // -------------------------------------------------------------
-            // CREATOR AUTHENTICATION GATE (Cricpulse2026 / Rcbc2026)
-            // -------------------------------------------------------------
-            isCreatorAuthenticated() {
-                return localStorage.getItem(AUTH_TOKEN_KEY) === 'VERIFIED_CHERRY_ADMIN';
-            },
-
-            openAuthModal() {
-                document.getElementById('authUsernameInput').value = '';
-                document.getElementById('authPasswordInput').value = '';
-                document.getElementById('modal-auth').classList.remove('hidden');
-            },
-
-            verifyCreatorLogin() {
-                const u = document.getElementById('authUsernameInput').value.trim();
-                const p = document.getElementById('authPasswordInput').value.trim();
-                if (u === 'Cricpulse2026' && p === 'Rcbc2026') {
-                    localStorage.setItem(AUTH_TOKEN_KEY, 'VERIFIED_CHERRY_ADMIN');
-                    this.isSpectator = false;
-                    this.closeModal('modal-auth');
-                    this.applySpectatorLockdownUI();
-                    this.renderAll();
-                    this.showToast('Creator Authentication Successful! Scorer mode unlocked.', 'emerald');
-                    if (this.pendingAuthAction) {
-                        const act = this.pendingAuthAction;
-                        this.pendingAuthAction = null;
-                        this.executeAuthAction(act);
-                    }
-                } else {
-                    this.showToast('Invalid User ID or Password!', 'rose');
-                }
-            },
-
-            requestAuthAction(actionType) {
-                if (this.isCreatorAuthenticated()) {
-                    this.executeAuthAction(actionType);
-                } else {
-                    this.pendingAuthAction = actionType;
-                    this.openAuthModal();
-                }
-            },
-
-            executeAuthAction(type) {
-                if (type === 'new_series') this.openSetupModal('new_series');
-                else if (type === 'next_match') this.openSetupModal('next_match');
-                else if (type === 'demo') this.loadDemoSampleMatch();
-                else if (type === 'reset') this.resetAllStorage();
             },
 
             // -------------------------------------------------------------
@@ -3173,153 +3107,6 @@
                 this.applySpectatorLockdownUI();
                 this.pullFromCloudRoom(true);
                 this.startSpectatorPolling();
-            },
-
-            proceedEndMatchStep2() {
-                document.getElementById('endMatchStep1').classList.add('hidden');
-                document.getElementById('endMatchStep2').classList.remove('hidden');
-            },
-
-            finalizeMatchConfirmed() {
-                const match = this.getActiveMatch();
-                if (!match) return;
-                const mode = document.getElementById('endMatchResultOverride').value;
-                this.closeModal('modal-endmatch');
-
-                if (mode === 'AUTO') {
-                    this.concludeMatchAutomatically(match);
-                    return;
-                }
-
-                match.status = 'completed';
-                if (mode === 'A') {
-                    match.winnerTeamKey = 'A';
-                    match.resultText = `${this.state.teamA.name} won`;
-                } else if (mode === 'B') {
-                    match.winnerTeamKey = 'B';
-                    match.resultText = `${this.state.teamB.name} won`;
-                } else if (mode === 'TIE') {
-                    match.winnerTeamKey = 'TIE';
-                    match.resultText = `Match Tied`;
-                } else {
-                    match.winnerTeamKey = 'NR';
-                    match.resultText = `No Result`;
-                }
-
-                this.saveState();
-                this.recordMatchIntoCareerHall(match);
-                this.navigate('analytics');
-            },
-
-            openMidMatchRulesModal() {
-                const match = this.getActiveMatch();
-                if (!match) return;
-                document.getElementById('midRuleLastMan').checked = !!match.rules.lastManStanding;
-                document.getElementById('midRuleWagon').checked = !!match.rules.wagonWheel;
-                document.getElementById('midRuleOvers').value = match.totalOvers;
-
-                const allPlayers = [...new Set([...this.state.teamA.players, ...this.state.teamB.players])];
-                const renameSel = document.getElementById('midRenameOldSelect');
-                if (renameSel) renameSel.innerHTML = allPlayers.map(p => `<option value="${p}">${p}</option>`).join('');
-                document.getElementById('modal-midrules').classList.remove('hidden');
-            },
-
-            renamePlayerMidMatch() {
-                const oldName = document.getElementById('midRenameOldSelect').value;
-                const newName = document.getElementById('midRenameNewInput').value.trim();
-                if (!oldName || !newName || oldName === newName) {
-                    this.showToast('Enter valid new name!', 'amber');
-                    return;
-                }
-
-                ['teamA', 'teamB'].forEach(tk => {
-                    const idx = this.state[tk].players.indexOf(oldName);
-                    if (idx !== -1) this.state[tk].players[idx] = newName;
-                });
-
-                const match = this.getActiveMatch();
-                if (match) {
-                    match.innings.forEach(inn => {
-                        const bIdx = inn.battingRoster.indexOf(oldName);
-                        if (bIdx !== -1) inn.battingRoster[bIdx] = newName;
-                        const bwIdx = inn.bowlingRoster.indexOf(oldName);
-                        if (bwIdx !== -1) inn.bowlingRoster[bwIdx] = newName;
-                        if (inn.striker === oldName) inn.striker = newName;
-                        if (inn.nonStriker === oldName) inn.nonStriker = newName;
-                        if (inn.currentBowler === oldName) inn.currentBowler = newName;
-                        if (inn.batStats[oldName]) {
-                            inn.batStats[newName] = { ...inn.batStats[oldName], name: newName };
-                            delete inn.batStats[oldName];
-                        }
-                        if (inn.bowlStats[oldName]) {
-                            inn.bowlStats[newName] = { ...inn.bowlStats[oldName], name: newName };
-                            delete inn.bowlStats[oldName];
-                        }
-                    });
-                }
-
-                document.getElementById('midRenameNewInput').value = '';
-                this.openMidMatchRulesModal();
-                this.saveState();
-                this.renderAll();
-                this.showToast(`Renamed "${oldName}" to "${newName}"!`, 'emerald');
-            },
-
-            saveMidMatchRules() {
-                const match = this.getActiveMatch();
-                if (!match) return;
-                match.rules.lastManStanding = document.getElementById('midRuleLastMan').checked;
-                match.rules.wagonWheel = document.getElementById('midRuleWagon').checked;
-                match.totalOvers = Math.max(1, parseInt(document.getElementById('midRuleOvers').value, 10) || match.totalOvers);
-                this.closeModal('modal-midrules');
-                this.saveState();
-                this.renderAll();
-                this.showToast('Rules updated!', 'emerald');
-            },
-
-            openShareModal() {
-                document.getElementById('shareModalRoomCode').textContent = this.state.roomCode;
-                const baseUrl = window.location.href.split('?')[0];
-                const shareUrl = `${baseUrl}?room=${encodeURIComponent(this.state.roomCode)}`;
-                document.getElementById('shareSpectatorUrlInput').value = shareUrl;
-                document.getElementById('modal-share').classList.remove('hidden');
-            },
-
-            copySpectatorLink() {
-                const input = document.getElementById('shareSpectatorUrlInput');
-                input.select();
-                navigator.clipboard?.writeText(input.value);
-                this.showToast('Spectator Link copied!', 'emerald');
-            },
-
-            copySnapshotLink() {
-                if (typeof LZString === 'undefined') return;
-                const baseUrl = window.location.href.split('?')[0];
-                const compressed = LZString.compressToEncodedURIComponent(JSON.stringify(this.state));
-                const snapUrl = `${baseUrl}?snap=${compressed}`;
-                navigator.clipboard?.writeText(snapUrl);
-                this.showToast('Archive link copied!', 'sky');
-            },
-
-            shareWhatsAppDirect() {
-                const url = document.getElementById('shareSpectatorUrlInput').value;
-                const match = this.getActiveMatch();
-                const scoreLine = match ? `${match.innings[match.currentInningsIndex].battingTeamName}: ${match.innings[match.currentInningsIndex].runs}/${match.innings[match.currentInningsIndex].wickets}` : this.state.seriesName;
-                const text = `🏏 *CricPulse Pro Live Score (Crafted by Cherry)*\n${scoreLine}\nRoom Code: *${this.state.roomCode}*\nLink: ${url}`;
-                window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
-            },
-
-            joinSpectatorRoomFromInput() {
-                const code = document.getElementById('joinRoomInput').value.trim().toUpperCase();
-                if (!code) {
-                    this.showToast('Enter valid Room Code', 'amber');
-                    return;
-                }
-                this.state.roomCode = code;
-                this.isSpectator = true;
-                this.applySpectatorLockdownUI();
-                this.renderAll();
-                this.showToast(`Joined spectator room ${code}`, 'emerald');
             },
 
             // -------------------------------------------------------------
